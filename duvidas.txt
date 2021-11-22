@@ -1,0 +1,1 @@
+é mais rápido passar argumentos por ponteiro ou dar return nas funções?
