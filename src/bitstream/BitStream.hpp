@@ -10,18 +10,25 @@ using namespace std;
 
 class BitStream {
     public:
-        BitStream(string filename, char mode){
-            this->file.open(filename, ios::binary);
+        BitStream(const char *filename, char mode){
             if (mode != 'w' && mode != 'r'){
                 cout << "ERROR: invalid mode!" << endl;
                 exit(EXIT_FAILURE);
             }
-            this->bit = 0;
+            if(mode == 'w'){
+                file.open(filename, ios::binary | ios::out);
+                bit = 8;
+            }else{  // mode == 'r'
+                file = fstream(filename, ios::binary | ios::in);
+                bit = 0;
+                buffer = 0;
+            }
         }
+
         unsigned char readBit();
         void writeBit(unsigned char bit);
-        unsigned char* readNbits(int inipos, int n);
-        void writeNbits(int inipos, int n, unsigned char* bits);
+        unsigned char readNbits(int n);
+        void writeNbits(int n, unsigned char* bits);
         void close();
     
     private:
