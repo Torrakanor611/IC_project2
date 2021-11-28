@@ -6,18 +6,20 @@ using namespace std;
 
 unsigned char BitStream::readBit(){
     if(pointer == 0){
-        pointer = 7;
+        pointer = 8;
         file.read(reinterpret_cast<char*>(&buffer), 1);
-        return (buffer >> pointer) & 0x01; 
+        printf("character read: %c\n", buffer); 
     }
     pointer--;
     return (buffer >> pointer) & 0x01;
 }
 
-void BitStream::writeBit(unsigned char bit){
+void BitStream::writeBit(char bit){
+    printf("pointer: %d\n", pointer);
     if(pointer == 1){
         buffer |= (bit & 0x01);
         file.write(reinterpret_cast<char*>(&buffer), 1);
+        printf("character written: %c\n", buffer);
         buffer = 0;
         pointer = 8;
         return;
@@ -26,13 +28,16 @@ void BitStream::writeBit(unsigned char bit){
     buffer |= ((bit & 0x01) << pointer);
 }
 
-unsigned char BitStream::readNbits(int n){
-    unsigned char c;
-    return c;
+void BitStream::readNbits(char* bits, int n){
+    for(int i = 0; i < n; i++){
+        bits[i] = readBit();
+    }
 }
 
-void BitStream::writeNbits(int n, unsigned char* bits){
-    return;
+void BitStream::writeNbits(char* bits, int n){
+    for(int i = 0; i < n; i++){
+        writeBit(bits[i]);
+    }
 }
 
 // write remain buffer on file

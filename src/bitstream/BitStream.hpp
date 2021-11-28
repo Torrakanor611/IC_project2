@@ -27,9 +27,9 @@ class BitStream {
             }
         }
         unsigned char readBit();
-        void writeBit(unsigned char bit);
-        unsigned char readNbits(int n);
-        void writeNbits(int n, unsigned char* bits);
+        void writeBit(char bit);
+        void readNbits(char* bits, int n);
+        void writeNbits(char* bits, int n);
         void close();
     
     private:

@@ -1,14 +1,13 @@
 // g++ readbit.cpp -o readbit
 
-// 01000001 - A ascci table
-
 #include "../src/bitstream/BitStream.cpp"
+#include "util/util.cpp"
 
 void printAsBinary(char byte[]);
 void printAsChar(char byte[]);
 
 int main(){
-    BitStream bs("out.bin", 'r');
+    BitStream bs("t.bin", 'r');
 
     char byte[8];
 
@@ -37,22 +36,5 @@ int main(){
     printf("%d\n", bs.readBit());
 }
 
-void printAsBinary(char byte[]){
-    printf("binary: ");
-    for (int i = 0; i < 8; i++){
-        printf("%d", byte[i]);
-    }
-    printf("\n");
-}
-
-void printAsChar(char byte[]){
-    unsigned char buff = 0;
-    unsigned char bit;
-    for(int i = 0; i < 8; i++){
-        bit = (byte[i] & 0x01) << (7 - i);
-        buff |= bit;
-    }
-    printf("char: %c\n", buff);
-}
 
 

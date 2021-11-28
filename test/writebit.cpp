@@ -1,6 +1,4 @@
-// g++ writebit.cpp -o writebit
-
-// 01000001 - A
+// g++ writeNbits.cpp -o writeNbits
 
 #include "../src/bitstream/BitStream.cpp"
 

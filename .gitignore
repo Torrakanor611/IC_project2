@@ -8,6 +8,4 @@ bin/*
 .vscode
 
 
-test/*.*
-
 remake.sh
