@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <stdlib.h>
+#include <map>
 
 using namespace std;
 
@@ -16,15 +17,15 @@ class BitStream {
                 exit(EXIT_FAILURE);
             }
             if(mode == 'w'){
-                file.open(filename, ios::binary | ios::out);
-                bit = 8;
+                file = fstream(filename, ios::binary | ios::out);
+                pointer = 8;
+                buffer = 0;
             }else{  // mode == 'r'
                 file = fstream(filename, ios::binary | ios::in);
-                bit = 0;
+                pointer = 0;
                 buffer = 0;
             }
         }
-
         unsigned char readBit();
         void writeBit(unsigned char bit);
         unsigned char readNbits(int n);
@@ -34,10 +35,9 @@ class BitStream {
     private:
         fstream file;
         unsigned char buffer;   // buffer[7] Msb , ... , buffer[0] Lsb
-        int bit; // goes from 0 to 7
-        // bit in 'r' mode points to last read bit
-        // bit in 'w' mode points to last written bit
-
+        int pointer; // goes from 0 to 7
+        // pointer in 'r' mode points to last read bit
+        // pointer in 'w' mode points to last written bit
 };
 
 #endif
