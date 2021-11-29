@@ -8,7 +8,6 @@ using namespace std;
 
 class Golomb {
     public:
-        Golomb();
         Golomb(const char *filename, char mode,int m){
             if (mode != 'd' && mode != 'e'){
                 cout << "ERROR: invalid mode!" << endl;
@@ -22,6 +21,10 @@ class Golomb {
             b =  ceil(log2(m));
         }
 
+        /**
+         * @param agdrffffff
+           * gbhhfanjklmsdçpojilhdsag
+         * */
         void encode(signed int n);
         signed int decode();
         void close();
