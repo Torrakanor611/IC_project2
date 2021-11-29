@@ -30,3 +30,10 @@ Then compile the code
 cmake ..
 make
 ```
+
+## Compiling documentation
+
+In terminal, on root
+```
+doxygen doxyconfig
+```
