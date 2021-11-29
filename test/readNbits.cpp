@@ -1,4 +1,4 @@
-// g++ readbit.cpp -o readbit
+// g++ readNbits.cpp -o readNbits
 
 #include "../src/bitstream/BitStream.cpp"
 

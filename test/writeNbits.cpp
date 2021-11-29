@@ -1,4 +1,4 @@
-// g++ writeNbit.cpp -o writeNbit
+// g++ writeNbits.cpp -o writeNbits
 
 // 01000001 - A
 

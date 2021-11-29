@@ -8,18 +8,15 @@ unsigned char BitStream::readBit(){
     if(pointer == 0){
         pointer = 8;
         file.read(reinterpret_cast<char*>(&buffer), 1);
-        printf("character read: %c\n", buffer); 
     }
     pointer--;
     return (buffer >> pointer) & 0x01;
 }
 
 void BitStream::writeBit(char bit){
-    printf("pointer: %d\n", pointer);
     if(pointer == 1){
         buffer |= (bit & 0x01);
         file.write(reinterpret_cast<char*>(&buffer), 1);
-        printf("character written: %c\n", buffer);
         buffer = 0;
         pointer = 8;
         return;
