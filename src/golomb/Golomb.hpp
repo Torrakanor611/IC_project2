@@ -8,7 +8,7 @@ using namespace std;
 
 class Golomb {
     public:
-        Golomb(const char *filename, char mode,int m){
+        Golomb(const char *filename, char mode, int m){
             if (mode != 'd' && mode != 'e'){
                 cout << "ERROR: invalid mode!" << endl;
                 exit(EXIT_FAILURE);

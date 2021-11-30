@@ -7,6 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 
 # add the bitstream library
 add_subdirectory(src/bitstream)
+add_subdirectory(src/golomb)
 
 # add the executable
 add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp)
@@ -20,4 +21,5 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 target_include_directories(main PUBLIC
                           "${PROJECT_BINARY_DIR}"
                           "${PROJECT_SOURCE_DIR}/bitstream"
-                          )
+                          "${PROJECT_SOURCE_DIR}/golomb"  
+                        )
