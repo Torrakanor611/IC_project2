@@ -1,8 +1,6 @@
 // g++ encodeGolomb.cpp -o encodeGolomb
 
-#include "../src/golomb/Golomb.cpp"
-#include "../src/bitstream/BitStream.cpp"
-#include "util/util.cpp"
+#include "../src/golomb/Golomb.hpp"
 
 void printAsBinary(char byte[]);
 void printAsChar(char byte[]);

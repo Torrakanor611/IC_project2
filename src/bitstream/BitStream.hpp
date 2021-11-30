@@ -11,7 +11,7 @@ using namespace std;
 
 class BitStream {
     public:
-        BitStream();
+        BitStream() = default;
         BitStream(const char *filename, char mode){
             if (mode != 'w' && mode != 'r'){
                 cout << "ERROR: invalid mode!" << endl;

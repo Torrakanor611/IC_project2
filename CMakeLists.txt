@@ -1,25 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
 
-# set the project name
-project(IC_project2)
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# set the project name
+project(IC_project2 VERSION 1.0)
 
 # add the bitstream library
-add_subdirectory(src/bitstream)
-add_subdirectory(src/golomb)
+add_library(bitstream src/bitstream/BitStream.cpp)
+add_library(golomb src/golomb/Golomb.cpp)
 
 # add the executable
 add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
 target_link_libraries(main PUBLIC bitstream)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+target_link_libraries(golomb bitstream)
 
-# add the binary tree to the search path for include files
-# so that we will find TutorialConfig.h
-target_include_directories(main PUBLIC
-                          "${PROJECT_BINARY_DIR}"
-                          "${PROJECT_SOURCE_DIR}/bitstream"
-                          "${PROJECT_SOURCE_DIR}/golomb"  
-                        )
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)

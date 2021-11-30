@@ -49,6 +49,5 @@ void Golomb::encode (int n){
     file.writeBit('0'); 
     for (int i = 0 ; i < n; i++)
         file.writeBit('1');
-
 }
 
