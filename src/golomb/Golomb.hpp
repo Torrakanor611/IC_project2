@@ -6,32 +6,52 @@
 
 using namespace std;
 
+/**
+ * Class for encoding and decoding values using golomb code.
+ */
 class Golomb {
     public:
-        Golomb(const char *filename, char mode, int m){
+        /**
+         * Golomb Class Constructor
+         * @param filename Path to a file were to store the enconded value or to read a value to be decoded.
+         * @param mode character 'e' for encoding a value 'd' for decoding a value.
+         * @param mvalue value of m that will be used in golomb encoding and decoding .
+         */
+        Golomb(const char *filename, char mode, int mvalue){
             if (mode != 'd' && mode != 'e'){
                 cout << "ERROR: invalid mode!" << endl;
                 exit(EXIT_FAILURE);
             }
             if (mode == 'd')
-                file = BitStream(filename, 'r');
+                Gfile = BitStream(filename, 'r');
             else
-                file = BitStream(filename, 'w');
-            m = m;
+                Gfile = BitStream(filename, 'w');
+            m = mvalue;
             b =  ceil(log2(m));
         }
 
         /**
-         * @param agdrffffff
-           * gbhhfanjklmsdçpojilhdsag
+         * Encode a number (positive or negative) using golomb code.
+         * @param n Integer number, positive or negative to be encoded.
+         * @return number of bits of the output encoded number.
          * */
-        void encode(signed int n);
+        int encode(int n);
+
+        /**
+         * Decode a number using golomb code. It has no parameters because the value to be decoded is read from the file 
+         * given when the constructor of the class Golomb is initialized.
+         * @return the decoded value.
+         * */
         signed int decode();
+
+        /**
+         * Close the golomb stream.
+         * */
         void close();
     
     private:
-        BitStream file;
-        int m;  
+        BitStream Gfile; 
+        int m; 
         int b;
 };
 

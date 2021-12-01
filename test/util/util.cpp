@@ -23,6 +23,14 @@ static void printAsBinary(char byte[]){
     printf("\n");
 }
 
+static void printAsBinaryMsbtoLsb(char byte[], int numbits){
+    printf("binary value: ");
+    for (int i = numbits-1; i >= 0; i--){
+        printf("%d", byte[i]);
+    }
+    printf("\n");
+}
+
 static void printAsChar(char byte[]){
     unsigned char buff = 0;
     unsigned char bit;

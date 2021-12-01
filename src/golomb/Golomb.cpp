@@ -1,10 +1,11 @@
 #include "Golomb.hpp"
+#include "../bitstream/BitStream.cpp"
 #include <math.h>
 
 using namespace std;
 
-void Golomb::encode (int n){
-    int q = floor(n / m);
+int Golomb::encode (int n){
+    int q = floor((int)(n / m));
     int r = n - q*m;
 
     // Variable to store number of bits of the binary part
@@ -28,26 +29,44 @@ void Golomb::encode (int n){
             numbits = b;
         }
     }
-
+    
     //Calculate Binary part
     string aux;
     int numbitsAux = numbits;
+
     while (value != 0){
-        aux += ( value % 2 == 0 ? "0" : "1" );
+        aux += ( value % 2 == 0 ? '0' : '1' );
         value /= 2;
         numbitsAux --;
     }
-    while(numbits != 0){
-        aux+= "0";
+    while(numbitsAux != 0){
+        aux+= '0';
         numbitsAux--;
     }
+
+    //Size of the word to return in the end
+    int size = numbits;
+
     //Write binary value in Bitstream
     for(int i = 0; i < numbits; i++ )
-        file.writeBit(aux[i]);
+        Gfile.writeBit(aux[i]);
 
     //Calculate unary part
-    file.writeBit('0'); 
-    for (int i = 0 ; i < n; i++)
-        file.writeBit('1');
+    Gfile.writeBit('0');
+    size++;
+    for (int i = 0 ; i < q; i++){
+        Gfile.writeBit('1');
+        size++;
+    }
+    return size;
 }
 
+
+
+
+
+
+
+void Golomb::close(){
+    Gfile.close();
+}
