@@ -8,5 +8,17 @@ bin/*
 
 .vscode
 
+*_out*
+
+# very usefull, keep only some files inside a folder:
+# 1st exclude all
+test/*
+# 2nd include all that DONT match the files u wuant
+!test/*.*
+
+!test/out.bin
+!test/t.bin
+
+!test/outN.bin
 
 remake.sh

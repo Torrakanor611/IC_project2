@@ -10,35 +10,24 @@
 using namespace std;
 
 class BitStream {
-    public:
-        BitStream() = default;
-        BitStream(const char *filename, char mode){
-            if (mode != 'w' && mode != 'r'){
-                cout << "ERROR: invalid mode!" << endl;
-                exit(EXIT_FAILURE);
-            }
-            if(mode == 'w'){
-                file = fstream(filename, ios::binary | ios::out);
-                pointer = 8;
-                buffer = 0;
-            }else{  // mode == 'r'
-                file = fstream(filename, ios::binary | ios::in);
-                pointer = 0;
-                buffer = 0;
-            }
-        }
-        unsigned char readBit();
-        void writeBit(char bit);
-        void readNbits(char* bits, int n);
-        void writeNbits(char* bits, int n);
-        void close();
-    
     private:
         fstream file;
+        int mode; // write = 0 / read = 1 
         unsigned char buffer;   // buffer[7] Msb , ... , buffer[0] Lsb
         int pointer; // goes from 0 to 7
         // pointer in 'r' mode points to last read bit
         // pointer in 'w' mode points to last written bit
+        int size;   // file size in bytes
+
+    public:
+        BitStream();
+        BitStream(const char *filename, char mode);
+        unsigned char readBit();
+        void writeBit(char bit);
+        void readNbits(char* bits, int n);
+        void writeNbits(char* bits, int n);
+        bool eof();
+        void close();
 };
 
 #endif
