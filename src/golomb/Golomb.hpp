@@ -17,18 +17,7 @@ class Golomb {
          * @param mode character 'e' for encoding a value 'd' for decoding a value.
          * @param mvalue value of m that will be used in golomb encoding and decoding .
          */
-        Golomb(const char *filename, char mode, int mvalue){
-            if (mode != 'd' && mode != 'e'){
-                cout << "ERROR: invalid mode!" << endl;
-                exit(EXIT_FAILURE);
-            }
-            if (mode == 'd')
-                Gfile = BitStream(filename, 'r');
-            else
-                Gfile = BitStream(filename, 'w');
-            m = mvalue;
-            b =  ceil(log2(m));
-        }
+        Golomb(const char *filename, char mode, int mvalue);
 
         /**
          * Encode a number (positive or negative) using golomb code.
@@ -42,7 +31,7 @@ class Golomb {
          * given when the constructor of the class Golomb is initialized.
          * @return the decoded value.
          * */
-        signed int decode();
+        signed int decode(int size);
 
         /**
          * Close the golomb stream.

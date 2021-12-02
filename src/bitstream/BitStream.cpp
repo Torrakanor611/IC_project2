@@ -4,6 +4,10 @@
 
 using namespace std;
 
+BitStream::BitStream(){
+    ;
+}
+
 BitStream::BitStream(const char *filename, char modein){
     if(modein == 'w'){ // write, mode = 0
         file = fstream(filename, ios::binary | ios::out);

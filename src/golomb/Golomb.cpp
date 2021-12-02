@@ -4,6 +4,22 @@
 
 using namespace std;
 
+
+Golomb::Golomb(const char *filename, char mode, int mvalue){
+    if (mode != 'd' && mode != 'e'){
+        cout << "ERROR: invalid mode!" << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (mode == 'd')
+        Gfile = BitStream(filename, 'r');
+    else
+        Gfile = BitStream(filename, 'w');
+    m = mvalue;
+    b =  ceil(log2(m));
+}
+
+
+
 int Golomb::encode (int n){
     int q = floor((int)(n / m));
     int r = n - q*m;
@@ -64,8 +80,67 @@ int Golomb::encode (int n){
 
 
 
+signed int Golomb::decode(int size){
+    int A = 0;
+    int R = 0;
 
+    //Read value to be decoded
+    char byte[size+1];    
+    Gfile.readNbits(byte, size+1);
+    //Close BitStream
+    Gfile.close();
 
+    //Count number of 1s before the first zero (Msbits) -> A
+    for (int i = size-1; i >= 0; i--){
+        if(byte[i] == 0x0)
+            break;
+        A++;
+    }
+
+    //If m is power of two 
+    if (m!=0 && (m & (m-1)) == 0){
+        //Get b+1 Lsbits of the origingal value to be decoded (R = b+1 Lsbit in decimal)
+        for( int i = 0; i < b+1; i++){
+            if(byte[i] != 0x0)
+                R+= pow(2, i);
+        }
+        //Calculate decoded value
+        return m*A + R;
+    }
+    //If m is not power of two
+    else{
+        int aux = b-1;
+        //Extract b-1 Msbs of the original word without the first ones and the first zero and calculate R in decimal
+        for (int i = size-1-A-1; i >= 0; i--){
+            aux--;
+            if(aux>=0){     
+                if(byte[i] != 0x0){
+                    R+= pow(2, aux);
+                }
+            }
+            else
+                break;
+        }
+        if(R < pow(2, b) - m)
+            return m*A + R;
+        else{
+            aux = b;
+            R = 0;
+            //Extract b Msbs of the original word without the first ones and the first zero and calculate R in decimal
+            for (int i = size-1-A-1; i >= 0; i--){
+                aux--;
+                if(aux>=0){     
+                    if(byte[i] != 0x0){
+                        R+= pow(2, aux);
+                    }
+                }
+                else
+                    break;
+            }
+            return m*A + R - (pow(2, b) - m); 
+        }
+    }
+}
 
 void Golomb::close(){
     Gfile.close();
