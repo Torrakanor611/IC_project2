@@ -24,7 +24,7 @@ static void printAsBinary(char byte[]){
 }
 
 static void printAsBinaryMsbtoLsb(char byte[], int numbits){
-    printf("binary value: ");
+    printf("Encoded Value: ");
     for (int i = numbits-1; i >= 0; i--){
         printf("%d", byte[i]);
     }
