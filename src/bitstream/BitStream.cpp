@@ -1,6 +1,7 @@
 #include "BitStream.hpp"
 
 #include <math.h>
+#include <string>
 
 using namespace std;
 
@@ -78,6 +79,7 @@ void BitStream::close(){
     if(mode == 0) // if write
         if (pointer != 8){
             file.write(reinterpret_cast<char*>(&buffer), 1);
+            file.write((to_string(pointer)).c_str(), 1);
         }
     file.close();
 }
