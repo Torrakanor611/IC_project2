@@ -7,9 +7,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set the project name
 project(IC_project2 VERSION 1.0)
 
-# add the bitstream library
+# add the librarys
 add_library(bitstream src/bitstream/BitStream.cpp)
 add_library(golomb src/golomb/Golomb.cpp)
+add_library(codecimg src/codecimg/Codecimg.cpp)
 
 # add the executable
 add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp)
