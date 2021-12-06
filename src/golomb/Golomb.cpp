@@ -1,6 +1,7 @@
 #include "Golomb.hpp"
 #include "../bitstream/BitStream.cpp"
 #include <math.h>
+#include <cstdlib>
 
 using namespace std;
 
@@ -21,6 +22,7 @@ Golomb::Golomb(const char *filename, char mode, int mvalue){
 
 
 int Golomb::encode (int n){
+    n = fold(n);
     int q = floor((int)(n / m));
     int r = n - q*m;
 
@@ -105,7 +107,7 @@ signed int Golomb::decode(int size){
                 R+= pow(2, i);
         }
         //Calculate decoded value
-        return m*A + R;
+        return unfold(m*A + R);
     }
     //If m is not power of two
     else{
@@ -122,7 +124,7 @@ signed int Golomb::decode(int size){
                 break;
         }
         if(R < pow(2, b) - m)
-            return m*A + R;
+            return unfold(m*A + R);
         else{
             aux = b;
             R = 0;
@@ -137,10 +139,29 @@ signed int Golomb::decode(int size){
                 else
                     break;
             }
-            return m*A + R - (pow(2, b) - m); 
+            return unfold(m*A + R - (pow(2, b) - m)); 
         }
     }
 }
+
+
+int Golomb::fold(int n){
+    if (n >= 0)
+        return n*2;
+    else
+        return abs(n)*2-1;
+
+}
+
+
+int Golomb::unfold(int n){
+    if (n % 2 == 0)
+        return n/2;
+    else
+        return (-1)*ceil(n/2)-1;
+
+}
+
 
 void Golomb::close(){
     Gfile.close();

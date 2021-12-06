@@ -31,7 +31,22 @@ class Golomb {
          * given when the constructor of the class Golomb is initialized.
          * @return the decoded value.
          * */
-        signed int decode(int size);
+        int decode(int size);
+
+        /**
+         * Convert an integer (positive or negative) into positive using folding tecnique
+         * @param n integer number to be converted
+         * @return converted value
+         * */
+        int fold(int n);
+
+
+        /**
+         * Convert a positive number into integer according to the folding tecnique
+         * @param n integer number to be converted
+         * @return converted value
+         * */
+        int unfold(int n);
 
         /**
          * Close the golomb stream.

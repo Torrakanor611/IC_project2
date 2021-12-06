@@ -1,35 +1,32 @@
 #include <iostream>
 #include <algorithm>
+#include <math.h>
 using std::cout;
 using std::endl;
 using std::string;
 
-string toBinary(int n)
-{
-    string r;
-    int numbits = 15;
-    while (n != 0){
-        r += ( n % 2 == 0 ? "0" : "1" );
-        n /= 2;
-        numbits --;
-    }
-    //reverse(r.begin(), r.end());
-    while(numbits != 0){
-        r+= "0";
-        numbits--;
-    }
-    cout << endl;
-    for(int i = 0; i < 15; i++ ){
-        cout << r[i] << endl;
-    }
-    return r;
+int fold(int n){
+    if (n >= 0)
+        return n*2;
+    else
+        return abs(n)*2-1;
+
 }
+
+
+int unfold(int n){
+    if (n % 2 == 0)
+        return n/2;
+    else
+        return (-1)*ceil(n/2)-1;
+
+}
+
 
 int main() {
     int number = 7;
 
-    cout << "decimal: " << number << endl;
-    cout << "binary : " << toBinary(number) << endl;
+    cout << "decimal: " << unfold(5) << endl;
 
     return EXIT_SUCCESS;
 }
