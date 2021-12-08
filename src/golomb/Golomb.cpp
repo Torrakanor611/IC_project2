@@ -82,13 +82,29 @@ int Golomb::encode (int n){
 
 
 
-signed int Golomb::decode(int size){
+int Golomb::decode(){
     int A = 0;
     int R = 0;
+    int size = 0;
 
+    //First char indicates the value of the pointer of bitstream
+    char firstChar[8];
+    Gfile.readNbits(firstChar, 8);
+    int pointerValue = extractPointerValue(firstChar);
+    
     //Read value to be decoded
-    char byte[size+1];    
-    Gfile.readNbits(byte, size+1);
+    char c;
+    string byte;
+    while(!Gfile.eof()){
+        c = Gfile.readBit();
+        if((c & 0x01) == 1)
+            byte+=char(0x1);
+        else
+            byte+=char(0x0);
+        size++;
+    }
+    size = size - pointerValue;
+    cout << "The number of bits is: " << size << endl;
     //Close BitStream
     Gfile.close();
 
@@ -161,6 +177,21 @@ int Golomb::unfold(int n){
         return (-1)*ceil(n/2)-1;
 
 }
+
+
+int Golomb::extractPointerValue(char array[]){
+    char result = array[7];
+    int p = 0;
+
+    for(int i=6; i >=4; i--){
+        p++;
+        if(array[i] == 0x1)
+            result = result | (0x01 << p);
+    }
+    return int(result);
+}
+
+
 
 
 void Golomb::close(){

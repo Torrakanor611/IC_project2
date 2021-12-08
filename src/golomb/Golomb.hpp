@@ -31,7 +31,7 @@ class Golomb {
          * given when the constructor of the class Golomb is initialized.
          * @return the decoded value.
          * */
-        int decode(int size);
+        int decode();
 
         /**
          * Convert an integer (positive or negative) into positive using folding tecnique
@@ -57,6 +57,9 @@ class Golomb {
         BitStream Gfile; 
         int m; 
         int b;
+
+        //Function to extract the pointer value (0 to 7) from a char array
+        int extractPointerValue(char array[]);
 };
 
 #endif

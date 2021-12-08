@@ -38,7 +38,7 @@ int main(int argc, char* argv[]){
     //Initialize Golomb object for decoding value
     Golomb g("t.bin", 'd', m);
     //Decode number
-    int value = g.decode(size);
+    int value = g.decode();
     //Close stream
     g.close();
     cout << "Decoded Value: " << value << endl;
