@@ -15,8 +15,14 @@ add_library(codecimg src/codecimg/Codecimg.cpp)
 # add the executable
 add_executable(main ${CMAKE_SOURCE_DIR}/src/main.cpp)
 
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
+
 target_link_libraries(main PUBLIC bitstream)
 
 target_link_libraries(golomb bitstream)
+
+target_link_libraries(codecimg ${OpenCV_LIBS})
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
