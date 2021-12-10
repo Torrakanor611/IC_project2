@@ -26,6 +26,8 @@ int main(int argc, char* argv[]){
     
     //BitStream to read result
     BitStream bs("t.bin", 'r');
+    char trash[8];
+    bs.readNbits(trash, 8);
     char byte[size+1];    
     bs.readNbits(byte, size+1);
     //Print in Binary

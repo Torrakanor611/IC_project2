@@ -23,6 +23,7 @@ Golomb::Golomb(const char *filename, char mode, int mvalue){
 
 int Golomb::encode (int n){
     n = fold(n);
+    cout << "Value to be decoded after Folding: " << n << endl;
     int q = floor((int)(n / m));
     int r = n - q*m;
 
@@ -76,6 +77,7 @@ int Golomb::encode (int n){
         Gfile.writeBit('1');
         size++;
     }
+
     return size;
 }
 
