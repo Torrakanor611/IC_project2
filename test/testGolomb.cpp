@@ -20,7 +20,9 @@ int main(int argc, char* argv[]){
     Golomb gb("t.bin", 'e', m);
     //Encode number
     int size = gb.encode(n);
-    cout << "Encoded value has " << size << " Bits" << endl;
+    int size2 = gb.encode(-8);
+    int size3 = gb.encode(6);
+    int size4 = gb.encode(94);
     //Close stream
     gb.close();
     
@@ -32,6 +34,12 @@ int main(int argc, char* argv[]){
     bs.readNbits(byte, size+1);
     //Print in Binary
     printAsBinaryMsbtoLsb(byte, size);
+    bs.readNbits(byte, size2+1);
+    printAsBinaryMsbtoLsb(byte, size2);
+    bs.readNbits(byte, size3+1);
+    printAsBinaryMsbtoLsb(byte, size3);
+    bs.readNbits(byte, size4+1);
+    printAsBinaryMsbtoLsb(byte, size4);
     //Close BitStream
     bs.close();
 
@@ -40,10 +48,12 @@ int main(int argc, char* argv[]){
     //Initialize Golomb object for decoding value
     Golomb g("t.bin", 'd', m);
     //Decode number
-    int value = g.decode();
+    cout << "Decoder Value: " << g.decode() << endl;
+    cout << "Decoder Value: " << g.decode() << endl;
+    cout << "Decoded Value: " << g.decode() << endl;
+    cout << "Decoded Value: " << g.decode() << endl;
     //Close stream
     g.close();
-    cout << "Decoded Value: " << value << endl;
-
+    
     return 0;
 }

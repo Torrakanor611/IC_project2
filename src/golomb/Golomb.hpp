@@ -57,9 +57,10 @@ class Golomb {
         BitStream Gfile; 
         int m; 
         int b;
+        bool pt;
 
         //Function to extract the pointer value (0 to 7) from a char array
-        int extractPointerValue(char array[]);
+        int extractPointerValue();
 };
 
 #endif

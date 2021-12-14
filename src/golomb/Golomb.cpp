@@ -17,6 +17,7 @@ Golomb::Golomb(const char *filename, char mode, int mvalue){
         Gfile = BitStream(filename, 'w');
     m = mvalue;
     b =  ceil(log2(m));
+    pt = false;
 }
 
 
@@ -66,18 +67,17 @@ int Golomb::encode (int n){
     //Size of the word to return in the end
     int size = numbits;
 
-    //Write binary value in Bitstream
-    for(int i = 0; i < numbits; i++ )
-        Gfile.writeBit(aux[i]);
-
-    //Calculate unary part
-    Gfile.writeBit('0');
+    //Calculate unary part and write it
     size++;
     for (int i = 0 ; i < q; i++){
         Gfile.writeBit('1');
         size++;
     }
+    Gfile.writeBit('0');
 
+    //Write binary value in Bitstream
+    for(int i = numbits-1; i >= 0; i-- )
+        Gfile.writeBit(aux[i]);
     return size;
 }
 
@@ -89,77 +89,67 @@ int Golomb::decode(){
     int R = 0;
     int size = 0;
 
-    //First char indicates the value of the pointer of bitstream
-    char firstChar[8];
-    Gfile.readNbits(firstChar, 8);
-    int pointerValue = extractPointerValue(firstChar);
+    if(pt == false)
+        extractPointerValue();
     
-    //Read value to be decoded
     char c;
-    string byte;
-    while(!Gfile.eof()){
-        c = Gfile.readBit();
-        if((c & 0x01) == 1)
-            byte+=char(0x1);
-        else
-            byte+=char(0x0);
-        size++;
-    }
-    size = size - pointerValue;
-    cout << "The number of bits is: " << size << endl;
-    //Close BitStream
-    Gfile.close();
-
     //Count number of 1s before the first zero (Msbits) -> A
-    for (int i = size-1; i >= 0; i--){
-        if(byte[i] == 0x0)
+    while(true){
+        c = Gfile.readBit();
+        if((c & 0x01) == 0x00)
             break;
         A++;
     }
 
     //If m is power of two 
     if (m!=0 && (m & (m-1)) == 0){
-        //Get b+1 Lsbits of the origingal value to be decoded (R = b+1 Lsbit in decimal)
-        for( int i = 0; i < b+1; i++){
-            if(byte[i] != 0x0)
-                R+= pow(2, i);
+        //cout << "Value has " << (A+b+1) << " bits" << endl;
+
+        char binary[b];
+        Gfile.readNbits(binary,b);
+    
+        //Get b+1 Lsbits of the origingal value to be decoded (R = (0)+b Lsbit in decimal)
+        int aux = 0;
+        for( int i = b-1; i >= 0; i--){
+            if(binary[i] != 0x0)
+                R+= pow(2, aux);
+            aux++;
         }
         //Calculate decoded value
         return unfold(m*A + R);
     }
     //If m is not power of two
     else{
-        int aux = b-1;
+        int aux = 0;
+        char binary[b];
+        Gfile.readNbits(binary,b-1);
+        binary[b-1] = 0;
+
         //Extract b-1 Msbs of the original word without the first ones and the first zero and calculate R in decimal
-        for (int i = size-1-A-1; i >= 0; i--){
-            aux--;
-            if(aux>=0){     
-                if(byte[i] != 0x0){
-                    R+= pow(2, aux);
-                }
-            }
-            else
-                break;
-        }
-        if(R < pow(2, b) - m)
+        for (int i = b-2; i >= 0; i--){
+            if(binary[i] != 0x00)
+                R+= pow(2, aux);
+            aux++;
+        } 
+ 
+        if(R < pow(2, b) - m){
+            //cout << "Value hass " << (A+1) + b - 1 <<" bits"<< R <<endl;
             return unfold(m*A + R);
+        }
+        //Extract b Msbs of the original word without the first ones and the first zero and calculate R in decimal
         else{
-            aux = b;
-            R = 0;
-            //Extract b Msbs of the original word without the first ones and the first zero and calculate R in decimal
-            for (int i = size-1-A-1; i >= 0; i--){
-                aux--;
-                if(aux>=0){     
-                    if(byte[i] != 0x0){
-                        R+= pow(2, aux);
-                    }
-                }
-                else
-                    break;
+            binary[b-1] = Gfile.readBit();
+            //cout << "Values has " << (A+1+b) << " bits"<< endl;
+            R=0, aux=0;
+            for (int i = b-1; i >= 0; i--){
+                if(binary[i] != 0x0)
+                    R+= pow(2, aux);
+                aux++;
             }
             return unfold(m*A + R - (pow(2, b) - m)); 
         }
     }
+    return 0;
 }
 
 
@@ -181,7 +171,11 @@ int Golomb::unfold(int n){
 }
 
 
-int Golomb::extractPointerValue(char array[]){
+int Golomb::extractPointerValue(){
+    //First char indicates the value of the pointer of bitstream
+    char array[8];
+    Gfile.readNbits(array, 8);
+
     char result = array[7];
     int p = 0;
 
@@ -190,6 +184,7 @@ int Golomb::extractPointerValue(char array[]){
         if(array[i] == 0x1)
             result = result | (0x01 << p);
     }
+    pt = true;
     return int(result);
 }
 
