@@ -12,10 +12,6 @@ BitStream::BitStream(const char *filename, char modein){
         file = fstream(filename, ios::binary | ios::out);
         pointer = 8;
         mode = 0;
-        if(!file.is_open())
-            throw runtime_error("Could not open file");
-        char c = '0';
-        file.write(&c, 1);
     }else if(modein == 'r'){  // read, mode = 1
         file = fstream(filename, ios::binary | ios::in);
         pointer = 0;
@@ -27,6 +23,8 @@ BitStream::BitStream(const char *filename, char modein){
         throw runtime_error("Wrong file open mode");
     }
     buffer = 0;
+    if(!file.is_open())
+        throw runtime_error("Could not open file");
 }
 
 unsigned char BitStream::readBit(){
@@ -76,10 +74,7 @@ bool BitStream::eof(){
 // write remain buffer on file
 void BitStream::close(){
     if(mode == 0) // if write
-        if (pointer != 8){
+        if (pointer != 8)
             file.write(reinterpret_cast<char*>(&buffer), 1);
-            file.seekg(0, ios::beg);
-            file.write((to_string(pointer)).c_str(), 1);
-        }
     file.close();
 }
