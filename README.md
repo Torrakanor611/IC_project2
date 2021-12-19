@@ -37,3 +37,6 @@ In terminal, on root
 ```
 doxygen doxyconfig
 ```
+
+
+acrescentar ao readme python3.8 e o matplotlib e ligação à internet
