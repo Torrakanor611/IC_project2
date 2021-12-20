@@ -19,6 +19,14 @@ int preditorJLS(int a, int b, int c){
         return a + b - c;
 }
 
+int preditor1(int a){
+    return a;
+}
+
+int preditor4(int a, int b, int c){
+    return a + b - c;
+}
+
 /**
  * Find maximum between two numbers.
  */

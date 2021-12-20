@@ -8,20 +8,20 @@ using namespace cv;
 
 class Codecimg{
     private:
-        Mat img;
-        Mat Y;
-        Mat U;
-        Mat V;
+        Mat Y, U, V;
         // ideal m
-
         void idealM(int pM);
         void transformYUV420(Mat m);
+
     public:
         Codecimg();
         Codecimg(const char *filename);
         void applyPredJLS();
-        void encode();
-        void write(const char *filename);
+        // filename -> nome do fich codificado
+        void encode(const char *filename);
+        // filename -> nome do fich descodificado
+        void decode(const char *filename);
+        void restore(const char * filename);
 };
 
 #endif

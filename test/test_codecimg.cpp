@@ -6,11 +6,13 @@ int main(){
 
     Codecimg c("../files/miuda.png");
 
-    cout << "chegou aqui!" << endl;
-
     c.applyPredJLS();
 
-    c.encode();
+    c.encode("miuda_encoded.bin");
+
+    c.decode("miuda_encoded.bin");
+
+    c.restore("miuda_restored.png");
 
     return 0;
 }

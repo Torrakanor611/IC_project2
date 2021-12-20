@@ -1,7 +1,7 @@
 #ifndef GOLOMB_H
 #define GOLOMB_H
 
-#include "../bitstream/BitStream.hpp"
+#include "../bitstream/BitStream.cpp"
 #include <math.h> 
 
 using namespace std;
@@ -11,6 +11,8 @@ using namespace std;
  */
 class Golomb {
     public:
+        Golomb();
+
         /**
          * Golomb Class Constructor
          * @param filename Path to a file were to store the enconded value or to read a value to be decoded.
@@ -52,15 +54,18 @@ class Golomb {
          * Close the golomb stream.
          * */
         void close();
-    
+
+        void encodeM(int n);
+
+        int decodeM();
+
+        void setM(int mi);
+
     private:
         BitStream Gfile; 
         int m; 
         int b;
         bool pt;
-
-        //Function to extract the pointer value (0 to 7) from a char array
-        int extractPointerValue();
 };
 
 #endif

@@ -39,7 +39,7 @@ target_link_libraries(main PUBLIC bitstream)
 
 target_link_libraries(golomb bitstream)
 
-target_link_libraries(codecimg preditorimg)
+target_link_libraries(codecimg preditorimg golomb)
 
 target_link_libraries(codecimg ${OpenCV_LIBS} ${PYTHON_LIBRARIES} Python3::NumPy)
 

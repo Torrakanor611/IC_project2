@@ -1,10 +1,36 @@
 #include "Golomb.hpp"
-#include "../bitstream/BitStream.cpp"
+#include "../bitstream/BitStream.hpp"
 #include <math.h>
 #include <cstdlib>
 
 using namespace std;
 
+int convertToInt(char arr[], int size){
+    int res=0;
+    for(int i=0;i<size;i++){
+        if(arr[i] != 0x00){
+            res+=pow(2, i);
+        }
+    }
+    return res;
+
+}
+
+string convertToBin(int value, int numBits){
+    string aux = "";
+    while (value != 0){
+        aux += ( value % 2 == 0 ? '0' : '1' );
+        value /= 2;
+        numBits --;
+    }
+    while(numBits != 0){
+        aux+= '0';
+        numBits--;
+    }
+    return aux;
+}
+
+Golomb::Golomb(){}
 
 Golomb::Golomb(const char *filename, char mode, int mvalue){
     if (mode != 'd' && mode != 'e'){
@@ -22,9 +48,9 @@ Golomb::Golomb(const char *filename, char mode, int mvalue){
 
 
 
-int Golomb::encode (int n){
+int Golomb::encode(int n){
     n = fold(n);
-    cout << "Value to be decoded after Folding: " << n << endl;
+    //cout << "Value to be decoded after Folding: " << n << endl;
     int q = floor((int)(n / m));
     int r = n - q*m;
 
@@ -81,17 +107,34 @@ int Golomb::encode (int n){
     return size;
 }
 
+void Golomb::encodeM(int m){
+    string s = convertToBin(m, 32);
+    char space[32];
 
+    for(int i = 0; i < 32; i++){
+        space[i] = s[i];
+    }
+
+    Gfile.writeNbits(space, 32);
+}
+
+int Golomb::decodeM(){
+    char space[32];
+    Gfile.readNbits(space, 32);
+    return convertToInt(space, 32);
+}
+
+void Golomb::setM(int mi){
+    this->m = mi;
+    b =  ceil(log2(m));
+}
 
 
 int Golomb::decode(){
     int A = 0;
     int R = 0;
-    int size = 0;
+    // int size = 0;
 
-    if(pt == false)
-        extractPointerValue();
-    
     char c;
     //Count number of 1s before the first zero (Msbits) -> A
     while(true){
@@ -169,26 +212,6 @@ int Golomb::unfold(int n){
         return (-1)*ceil(n/2)-1;
 
 }
-
-
-int Golomb::extractPointerValue(){
-    //First char indicates the value of the pointer of bitstream
-    char array[8];
-    Gfile.readNbits(array, 8);
-
-    char result = array[7];
-    int p = 0;
-
-    for(int i=6; i >=4; i--){
-        p++;
-        if(array[i] == 0x1)
-            result = result | (0x01 << p);
-    }
-    pt = true;
-    return int(result);
-}
-
-
 
 
 void Golomb::close(){
