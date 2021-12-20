@@ -2,13 +2,14 @@
 #define CODECIMG_H
 
 #include <opencv2/core.hpp>
-
+#include <vector>
 
 using namespace cv;
 
 class Codecimg{
     private:
         Mat Y, U, V;
+        vector<int> resY, resU, resV;
         // ideal m
         void idealM(int pM);
         void transformYUV420(Mat m);
