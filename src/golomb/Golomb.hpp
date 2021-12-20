@@ -55,17 +55,45 @@ class Golomb {
          * */
         void close();
 
+        /**
+         * Encode the golomb parameter m in binary (write it in the binary file)
+         * @param n integer value that represents the m
+         * */
         void encodeM(int n);
 
+        /**
+         * Read in binary the value of the golomb m
+         * @return an integer that represents the m
+         * */
         int decodeM();
 
+        /**
+         * Set value of m
+         * @param mi integer that represents the m
+         * */
         void setM(int mi);
+
+        /**
+         * Encode in binary the header of a soundfile
+         * @param nFrames number of frames of the audio file
+         * @param sampleRate of the audio file
+         * @param Channels of the audiofile
+         * @param format of the audiofile
+         **/
+        void encodeHeaderSound(int nFrames, int sampleRate, int Channels, int format);
+
+
+        /**
+         * Decode the binary header of the soundfile
+         * @param arr integer array of size 4 that will contain nFrames, sampleRate, numChannels and format
+         * 
+         **/
+        void decodeHeaderSound(int arr[]);
 
     private:
         BitStream Gfile; 
         int m; 
         int b;
-        bool pt;
 };
 
 #endif

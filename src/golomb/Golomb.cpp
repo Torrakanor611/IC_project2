@@ -5,6 +5,7 @@
 
 using namespace std;
 
+//Auxiliary function to convert char array from bin to int
 int convertToInt(char arr[], int size){
     int res=0;
     for(int i=0;i<size;i++){
@@ -15,7 +16,7 @@ int convertToInt(char arr[], int size){
     return res;
 
 }
-
+//Auxiliary function to convert int value to string in binary with numBits bits
 string convertToBin(int value, int numBits){
     string aux = "";
     while (value != 0){
@@ -43,7 +44,6 @@ Golomb::Golomb(const char *filename, char mode, int mvalue){
         Gfile = BitStream(filename, 'w');
     m = mvalue;
     b =  ceil(log2(m));
-    pt = false;
 }
 
 
@@ -194,6 +194,45 @@ int Golomb::decode(){
     }
     return 0;
 }
+
+
+void Golomb::encodeHeaderSound(int nFrames, int sampleRate, int Channels, int format){
+    /*
+     * Header
+     * Golomb m                 -> 32 bits
+     * Number of samples        -> 32 bits
+     * Sample Rate              -> 32 bits
+     * Format                   -> 32 bits
+     * Channels                 -> 4 bits
+     */ 
+    string header = convertToBin(nFrames, 32);
+    header += convertToBin(sampleRate, 32);
+    header += convertToBin(format,32);
+    header += convertToBin(Channels, 4);
+
+    char hdr[100];
+    for(int i=0; i < 100; i++)
+        hdr[i] = header[i];
+    Gfile.writeNbits(hdr, 100);
+}
+
+void Golomb::decodeHeaderSound(int arr[]){
+    char rd[32];
+    //Arr[0] is num of samples
+    Gfile.readNbits(rd, 32);
+    arr[0] = convertToInt(rd,32);
+    //Arr[1] is Sample Rate
+    Gfile.readNbits(rd, 32);
+    arr[1] = convertToInt(rd,32);
+    //Arr[2] is num of samples
+    Gfile.readNbits(rd, 32);
+    arr[2] = convertToInt(rd,32);
+    //Arr[3] is num of channels
+    char nc[4];
+    Gfile.readNbits(nc, 4);
+    arr[3] = convertToInt(nc,4);
+}
+
 
 
 int Golomb::fold(int n){
