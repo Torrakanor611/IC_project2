@@ -16,7 +16,7 @@ void showYUV(const char* title, Mat Y, Mat V, Mat U);
 void apply(Mat src, vector<int> res);
 void restoreMat(vector<int>, Mat src);
 void printij(int i, int j);
-// void encodeG(Golomb b, Mat m);
+void res2Mat(vector<int> src, Mat dst);
 
 Codecimg::Codecimg(){}
 
@@ -119,30 +119,49 @@ void Codecimg::decompress(const char *fileSrc){
 
     g.setM(m);
 
-    int cols = g.decode();
-    int rows = g.decode();
+    int ncols = g.decode();
+    int nrows = g.decode();
 
     vector<int> resY, resU, resV;
 
-    for(int i = 0; i < cols*rows; i++){
+    for(int i = 0; i < ncols*nrows; i++){
         resY.push_back(g.decode());
     }
-        cout << "teste" << endl;
-    for(int i = 0; i < (cols*3/2)*(rows*3/2); i++){
+    for(int i = 0; i < (ncols*3/2)*(nrows*3/2); i++){
         resU.push_back(g.decode());
     }
-    for(int i = 0; i < (cols*3/2)*(rows*3/2); i++){
+    for(int i = 0; i < (ncols*3/2)*(nrows*3/2); i++){
         resV.push_back(g.decode());
     }
 
     g.close();
 
-    printf("all ok!");
-    exit(0);
+    Y = Mat(nrows, ncols, CV_8UC1);
+    U = Mat(nrows*3/2, ncols*3/2, CV_8UC1);
+    V = Mat(nrows*3/2, ncols*3/2, CV_8UC1);
+
+    int a, b, c, xCn;
+    for(int i = ncols + 1; i < resY.size(); i++){
+        a = resY[i - 1];
+        b = resY[i - ncols];
+        c = resY[i - ncols - 1];
+
+        xCn = preditorJLS(a, b, c);
+
+        
+    }
 
     // falta calcular a "imagem"
     // colocar num Mat e escrever
+
+    printf("all ok!");
+    exit(0);
 }
+
+void res2Mat(vector<int> src, Mat dst){
+    ;
+}
+
 
 void Codecimg::restore(const char * filename){
     ;
