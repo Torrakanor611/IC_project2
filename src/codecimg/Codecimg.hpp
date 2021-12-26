@@ -20,7 +20,6 @@ class Codecimg{
         void encode(const char *filename);
         // filename -> nome do fich descodificado
         void decode(const char *filename);
-        void restore(const char * filename);
 
     public:
         Codecimg();

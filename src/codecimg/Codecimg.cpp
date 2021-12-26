@@ -13,8 +13,9 @@ namespace plt = matplotlibcpp;
 void showImg(const char* title, Mat m);
 void showImgHist(const char* title, Mat m);
 void showYUV(const char* title, Mat Y, Mat V, Mat U);
-void apply(Mat src, vector<int> res);
-void restoreMat(vector<int>, Mat src);
+void apply(Mat src, vector<int>& res);
+void restoreMat(vector<int>, vector<int>& res);
+void restore(uchar* data, vector<int>& res, int nrows, int ncols);
 void printij(int i, int j);
 void res2Mat(vector<int> src, Mat dst);
 
@@ -62,31 +63,33 @@ void Codecimg::compress(const char *fileDst){
 
     g.encodeM(m);
 
+    printf("Y.cols = %d, Y.rows = %d\n", Y.cols, Y.rows);
+
     g.encode(Y.cols);
     g.encode(Y.rows);
 
-    for(int i = 0; i < (int) resY.size(); i++){
+    for(int i = 0; i < Y.cols * Y.rows; i++){
         g.encode(resY[i]);
     }
-    for(int i = 0; i < (int) resU.size(); i++){
+    for(int i = 0; i < U.cols * U.rows; i++){
         g.encode(resU[i]);
     }
-    for(int i = 0; i < (int) resV.size(); i++){
+    for(int i = 0; i < V.cols * V.rows; i++){
         g.encode(resV[i]);
     }
     g.close();
 }
 
-void apply(Mat src, vector<int> res){
+void apply(Mat src, vector<int>& res){
     int a, b, c;
     for(int x = src.cols - 1; x > - 1; x--){
-        // printf("added to array pos1: "); printij(x, src.rows - 1); printf("\n");
+        //printf("added to array pos1: "); printij(x, src.rows - 1); printf("\n");
         res.push_back(src.at<uchar>(src.rows - 1, x));
     }
     for(int y = src.rows - 2; y > -1 ; y--){
         for(int x = src.cols - 1; x > -1; x--){
             if(x == src.cols - 1){
-                // printf("added to array pos: "); printij(x, y); printf("\n");
+                //printf("added to array pos: "); printij(x, y); printf("\n");
                 res.push_back(src.at<uchar>(y, x));
                 continue;
             }
@@ -94,8 +97,10 @@ void apply(Mat src, vector<int> res){
             b = src.at<uchar>(y + 1, x);
             c = src.at<uchar>(y + 1, x + 1);
             // rn = xn - ^xn
-            // printf("added to array pos: "); printij(x, y); printf("\n");
+            //printf("added to array pos: "); printij(x, y); printf("\n");
             res.push_back(src.at<uchar>(y, x) - preditorJLS(a, b, c));
+
+
             // if (y == 20 && x == 26){
             //     printf("(y, x) = "); printij(y, x); printf("\n");
             //     printf("aplicando a fórmula -> rn = xn - ^xn\n");
@@ -122,39 +127,90 @@ void Codecimg::decompress(const char *fileSrc){
     int ncols = g.decode();
     int nrows = g.decode();
 
+    printf("ncols = %d, nrows = %d\n", ncols, nrows);
+
     vector<int> resY, resU, resV;
 
     for(int i = 0; i < ncols*nrows; i++){
         resY.push_back(g.decode());
     }
-    for(int i = 0; i < (ncols*3/2)*(nrows*3/2); i++){
+    for(int i = 0; i < (ncols/2)*(nrows/2); i++){
         resU.push_back(g.decode());
     }
-    for(int i = 0; i < (ncols*3/2)*(nrows*3/2); i++){
+    for(int i = 0; i < (ncols/2)*(nrows/2); i++){
         resV.push_back(g.decode());
     }
 
     g.close();
 
     Y = Mat(nrows, ncols, CV_8UC1);
-    U = Mat(nrows*3/2, ncols*3/2, CV_8UC1);
-    V = Mat(nrows*3/2, ncols*3/2, CV_8UC1);
+    // U = Mat(nrows/2, ncols/2, CV_8UC1);
+    // V = Mat(nrows/2, ncols/2, CV_8UC1);
 
-    int a, b, c, xCn;
-    for(int i = ncols + 1; i < resY.size(); i++){
-        a = resY[i - 1];
-        b = resY[i - ncols];
-        c = resY[i - ncols - 1];
+    uchar dataY[Y.rows * Y.cols];
+    // uchar dataU[U.rows * U.cols];
+    // uchar dataV[V.rows * V.cols];
+
+    // restore(dataY, resY, Y.rows, Y.cols);
+    // restore(dataU, resU, U.rows, U.cols);
+    // restore(dataV, resV, V.rows, V.cols);
+
+    for(int i = 0; i < ncols; i++){
+        dataY[i] = resY[i];
+    }
+
+    int a, b, c, rn, xCn;
+    for(int i = ncols; i < ncols * nrows; i++){
+        if (i % ncols == 0){
+            dataY[i] = resY[i];
+            continue;
+        }
+
+        a = dataY[i - 1];
+        b = dataY[i - ncols];
+        c = dataY[i - ncols - 1];
+
+        rn = resY[i];
+        // printf("rn = %d", rn);
 
         xCn = preditorJLS(a, b, c);
+        // printf("xCn = %d", xCn);
 
-        
+        dataY[i] = (uchar) rn + xCn;
+        // printf("data = %d", dataY[i]);
+        // if(i == (20 * nrows + 26) - 1){
+        //     printf("rn = %d\n", rn);
+        //     printf("xCn = %d\n", xCn);
+        //     printf("data = %d\n", dataY[i]);
+        // } 
     }
+
+    Y.data = dataY;
+    // U.data = dataU;
+    // V.data = dataV;
+
+    showImg("Y restored", Y);
+    // showImg("U restored", U);
+    // showImg("V restored", V);
+
+    // for(int y = Y.rows; y > -1 ; y--)
+    //     for(int x = Y.cols - 1; x > -1; x--){
+    //         if (y == 20 && x == 26){
+    //             printf("(y, x) = "); printij(y, x); printf("\n");
+    //             printf("aplicando a fórmula -> xn = rn + ^xn\n");
+    //             printf("valor restaurado (xn) para (y, x): %d\n", Y.at<uchar>(y, x));
+    //             // printf("valor preditado (x^n) para (y, x): %d || valor residual para(y, x): %d\n", preditorJLS(a, b, c), res[res.size() - 1]);
+    //             // printf("a -> "); printij(y, x - 1); printf("\n");
+    //             // printf("b -> "); printij(y + 1, x); printf("\n");
+    //             // printf("c -> "); printij(y + 1, x - 1); printf("\n");
+    //             // printf("\n");
+    //         }
+    //     }
 
     // falta calcular a "imagem"
     // colocar num Mat e escrever
 
-    printf("all ok!");
+    printf("all ok!\n");
     exit(0);
 }
 
@@ -163,8 +219,32 @@ void res2Mat(vector<int> src, Mat dst){
 }
 
 
-void Codecimg::restore(const char * filename){
-    ;
+void restore(uchar* data, vector<int>& res, int nrows, int ncols){
+    int a, b, c, rn, xCn;
+    for(int i = ncols; i < ncols * nrows; i++){
+        if (i % ncols == 0){
+            data[i] = res[i];
+            continue;
+        }
+
+        a = data[i - 1];
+        b = data[i - ncols];
+        c = data[i - ncols - 1];
+
+        rn = res[i];
+        // printf("rn = %d", rn);
+
+        xCn = preditorJLS(a, b, c);
+        // printf("xCn = %d", xCn);
+
+        data[i] = (uchar) rn + xCn;
+        // printf("data = %d", dataY[i]);
+        // if(i == (20 * nrows + 26) - 1){
+        //     printf("rn = %d\n", rn);
+        //     printf("xCn = %d\n", xCn);
+        //     printf("data = %d\n", dataY[i]);
+        // } 
+    }
 }
 
 
