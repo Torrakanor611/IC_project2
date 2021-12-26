@@ -17,7 +17,7 @@ void apply(Mat src, vector<int>& res);
 void restoreMat(vector<int>, vector<int>& res);
 void restore(uchar* data, vector<int>& res, int nrows, int ncols);
 void printij(int i, int j);
-void res2Mat(vector<int> src, Mat dst);
+void reverse(uchar* src, uchar* dst, int size);
 
 Codecimg::Codecimg(){}
 
@@ -26,6 +26,8 @@ Codecimg::Codecimg(const char *filename){
     if(img.empty()){
         throw new runtime_error("could not make mat");
     }
+    this->filename = (char*) filename;
+    showImg("img original entrada", img);
     transformYUV420(img);
 }
 
@@ -99,18 +101,6 @@ void apply(Mat src, vector<int>& res){
             // rn = xn - ^xn
             //printf("added to array pos: "); printij(x, y); printf("\n");
             res.push_back(src.at<uchar>(y, x) - preditorJLS(a, b, c));
-
-
-            // if (y == 20 && x == 26){
-            //     printf("(y, x) = "); printij(y, x); printf("\n");
-            //     printf("aplicando a fórmula -> rn = xn - ^xn\n");
-            //     printf("valor inicial (xn) para (y, x): %d\n", src.at<uchar>(y, x));
-            //     printf("valor preditado (x^n) para (y, x): %d || valor residual para(y, x): %d\n", preditorJLS(a, b, c), res[res.size() - 1]);
-            //     printf("a -> "); printij(y, x - 1); printf("\n");
-            //     printf("b -> "); printij(y + 1, x); printf("\n");
-            //     printf("c -> "); printij(y + 1, x - 1); printf("\n");
-            //     printf("\n");
-            // }
         }
     }
 }
@@ -147,30 +137,19 @@ void Codecimg::decompress(const char *fileSrc){
     U = Mat(nrows/2, ncols/2, CV_8UC1);
     V = Mat(nrows/2, ncols/2, CV_8UC1);
 
-    uchar dataY[Y.rows * Y.cols];
-    uchar dataU[U.rows * U.cols];
-    uchar dataV[V.rows * V.cols];
+    uchar dataY[Y.rows * Y.cols], fdataY[Y.rows * Y.cols];
+    uchar dataU[U.rows * U.cols], fdataU[U.rows * U.cols];
+    uchar dataV[V.rows * V.cols], fdataV[V.rows * V.cols];
 
     restore(dataY, resY, Y.rows, Y.cols);
     restore(dataU, resU, U.rows, U.cols);
     restore(dataV, resV, V.rows, V.cols);
 
-    uchar fdataY[Y.rows * Y.cols];
-    uchar fdataU[U.rows * U.cols];
-    uchar fdataV[V.rows * V.cols];
-
     int aux = Y.rows * Y.cols;
 
-    for(int i = 0; i < Y.rows * Y.cols; i++){
-        fdataY[i] = dataY[(aux - 1) - i];
-    }
-    aux = U.cols * U.rows;
-    for(int i = 0; i < U.rows * U.cols; i++){
-        fdataU[i] = dataU[(aux - 1) - i];
-    }
-    for(int i = 0; i < V.rows * V.cols; i++){
-        fdataV[i] = dataV[(aux - 1) - i];
-    }
+    reverse(dataY, fdataY, aux);
+    reverse(dataU, fdataU, aux/4);
+    reverse(dataV, fdataV, aux/4);
 
     Y.data = fdataY;
     U.data = fdataU;
@@ -180,38 +159,15 @@ void Codecimg::decompress(const char *fileSrc){
     showImg("U restored", U);
     showImg("V restored", V);
 
-    resize(U, U, Size(U.cols * 2, U.rows * 2), INTER_LINEAR);
-    resize(V, V, Size(V.cols * 2, V.rows * 2), INTER_LINEAR);
+    Mat maux(nrows, ncols, CV_8UC3);
+    transformRGB(maux);
 
-    showImg("U resized", U);
-    showImg("V resized", V);
+    showImg("imagem restaurada", maux);
 
-    
-
-
-    // for(int y = Y.rows; y > -1 ; y--)
-    //     for(int x = Y.cols - 1; x > -1; x--){
-    //         if (y == 20 && x == 26){
-    //             printf("(y, x) = "); printij(y, x); printf("\n");
-    //             printf("aplicando a fórmula -> xn = rn + ^xn\n");
-    //             printf("valor restaurado (xn) para (y, x): %d\n", Y.at<uchar>(y, x));
-    //             // printf("valor preditado (x^n) para (y, x): %d || valor residual para(y, x): %d\n", preditorJLS(a, b, c), res[res.size() - 1]);
-    //             // printf("a -> "); printij(y, x - 1); printf("\n");
-    //             // printf("b -> "); printij(y + 1, x); printf("\n");
-    //             // printf("c -> "); printij(y + 1, x - 1); printf("\n");
-    //             // printf("\n");
-    //         }
-    //     }
-
-    // falta calcular a "imagem"
-    // colocar num Mat e escrever
+    imwrite(filename, maux);
 
     printf("all ok!\n");
     exit(0);
-}
-
-void res2Mat(vector<int> src, Mat dst){
-    ;
 }
 
 
@@ -246,9 +202,34 @@ void restore(uchar* data, vector<int>& res, int nrows, int ncols){
     }
 }
 
+void Codecimg::transformRGB(Mat &m){
+    resize(U, U, Size(U.cols * 2, U.rows * 2), INTER_LINEAR);
+    resize(V, V, Size(V.cols * 2, V.rows * 2), INTER_LINEAR);
 
-void restoreMat(vector<int> res, Mat src){
-    ;
+    // showImg("U resized", U);
+    // showImg("V resized", V);
+
+    uchar Yp, Up, Vp;
+    Vec3b bgr;
+
+    for(int y = 0; y < Y.rows; y++)
+        for(int x = 0; x < Y.cols; x++){
+            Yp = Y.at<uchar>(y, x);
+            Up = U.at<uchar>(y, x);
+            Vp = V.at<uchar>(y, x);
+            
+            bgr[2] = Yp + 1.400 * (Vp - 128);
+            bgr[1] = Yp - 0.343 * (Up - 128) - 0.711 * (Vp - 128);
+            bgr[0] = Yp + 1.765 * (Up - 128);
+
+            m.at<Vec3b>(y, x) = bgr;
+        }
+}
+
+void reverse(uchar* src, uchar* dst, int size){
+    for(int i = 0; i < size; i++){
+        dst[i] = src[(size - 1) - i];
+    }
 }
 
  

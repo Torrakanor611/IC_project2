@@ -14,6 +14,7 @@ class Codecimg{
         // ideal m
         void idealM(int pM);
         void transformYUV420(Mat m);
+        void transformRGB(Mat &m);
 
         void applyPredJLS();
         // filename -> nome do fich codificado
