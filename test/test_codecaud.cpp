@@ -5,8 +5,11 @@ int main(){
 
     Codecaud c("../files/sample01.wav");
 
-    c.compress("compress.wav");
-    printf("ok compress");
+    c.compress("compress.bin");
+    printf("ok compress\n\n");
+
+    c.decompress("compress.bin");
+    printf("ok decompress\n\n");
 
     return 0;
 }

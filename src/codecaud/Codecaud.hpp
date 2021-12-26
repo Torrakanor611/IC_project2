@@ -9,10 +9,13 @@ class Codecaud{
     private:
         char* filename;
         SF_INFO sfinfo;
+        int ninput;
         std::vector<short> chs = {};
         // filename -> nome do fich codificado
         void encode(const char *filename);
-
+        // filename -> nome do fich descodificado
+        void decode(const char *filename);
+        
     public:
         Codecaud();
         Codecaud(const char *filename);
