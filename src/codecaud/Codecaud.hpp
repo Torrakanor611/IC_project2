@@ -11,16 +11,14 @@ class Codecaud{
         SF_INFO sfinfo;
         int ninput;
         std::vector<short> chs = {};
-        // filename -> nome do fich codificado
-        void encode(const char *filename);
-        // filename -> nome do fich descodificado
-        void decode(const char *filename);
+        std::vector<short> rn = {};
         
     public:
         Codecaud();
         Codecaud(const char *filename);
-        void compress(const char *fileDst);
+        void compress(const char *fileDst, int num);
         void decompress(const char *fileSrc);
+        void showHistEnt();
 };
 
 #endif
