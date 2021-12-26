@@ -144,54 +144,50 @@ void Codecimg::decompress(const char *fileSrc){
     g.close();
 
     Y = Mat(nrows, ncols, CV_8UC1);
-    // U = Mat(nrows/2, ncols/2, CV_8UC1);
-    // V = Mat(nrows/2, ncols/2, CV_8UC1);
+    U = Mat(nrows/2, ncols/2, CV_8UC1);
+    V = Mat(nrows/2, ncols/2, CV_8UC1);
 
     uchar dataY[Y.rows * Y.cols];
-    // uchar dataU[U.rows * U.cols];
-    // uchar dataV[V.rows * V.cols];
+    uchar dataU[U.rows * U.cols];
+    uchar dataV[V.rows * V.cols];
 
-    // restore(dataY, resY, Y.rows, Y.cols);
-    // restore(dataU, resU, U.rows, U.cols);
-    // restore(dataV, resV, V.rows, V.cols);
+    restore(dataY, resY, Y.rows, Y.cols);
+    restore(dataU, resU, U.rows, U.cols);
+    restore(dataV, resV, V.rows, V.cols);
 
-    for(int i = 0; i < ncols; i++){
-        dataY[i] = resY[i];
+    uchar fdataY[Y.rows * Y.cols];
+    uchar fdataU[U.rows * U.cols];
+    uchar fdataV[V.rows * V.cols];
+
+    int aux = Y.rows * Y.cols;
+
+    for(int i = 0; i < Y.rows * Y.cols; i++){
+        fdataY[i] = dataY[(aux - 1) - i];
+    }
+    aux = U.cols * U.rows;
+    for(int i = 0; i < U.rows * U.cols; i++){
+        fdataU[i] = dataU[(aux - 1) - i];
+    }
+    for(int i = 0; i < V.rows * V.cols; i++){
+        fdataV[i] = dataV[(aux - 1) - i];
     }
 
-    int a, b, c, rn, xCn;
-    for(int i = ncols; i < ncols * nrows; i++){
-        if (i % ncols == 0){
-            dataY[i] = resY[i];
-            continue;
-        }
-
-        a = dataY[i - 1];
-        b = dataY[i - ncols];
-        c = dataY[i - ncols - 1];
-
-        rn = resY[i];
-        // printf("rn = %d", rn);
-
-        xCn = preditorJLS(a, b, c);
-        // printf("xCn = %d", xCn);
-
-        dataY[i] = (uchar) rn + xCn;
-        // printf("data = %d", dataY[i]);
-        // if(i == (20 * nrows + 26) - 1){
-        //     printf("rn = %d\n", rn);
-        //     printf("xCn = %d\n", xCn);
-        //     printf("data = %d\n", dataY[i]);
-        // } 
-    }
-
-    Y.data = dataY;
-    // U.data = dataU;
-    // V.data = dataV;
+    Y.data = fdataY;
+    U.data = fdataU;
+    V.data = fdataV;
 
     showImg("Y restored", Y);
-    // showImg("U restored", U);
-    // showImg("V restored", V);
+    showImg("U restored", U);
+    showImg("V restored", V);
+
+    resize(U, U, Size(U.cols * 2, U.rows * 2), INTER_LINEAR);
+    resize(V, V, Size(V.cols * 2, V.rows * 2), INTER_LINEAR);
+
+    showImg("U resized", U);
+    showImg("V resized", V);
+
+    
+
 
     // for(int y = Y.rows; y > -1 ; y--)
     //     for(int x = Y.cols - 1; x > -1; x--){
@@ -220,6 +216,9 @@ void res2Mat(vector<int> src, Mat dst){
 
 
 void restore(uchar* data, vector<int>& res, int nrows, int ncols){
+    for(int i = 0; i < ncols; i++){
+        data[i] = res[i];
+    }
     int a, b, c, rn, xCn;
     for(int i = ncols; i < ncols * nrows; i++){
         if (i % ncols == 0){
@@ -323,4 +322,3 @@ void showYUV(const char* title, Mat Y, Mat V, Mat U){
 void printij(int i, int j){
     printf("(%d, %d)", i, j);
 }
-
