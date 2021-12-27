@@ -3,10 +3,15 @@
 #include "../src/codecimg/Codecimg.cpp"
 
 int main(){
+    try{
+        Codecimg c("../files/miuda.png");
+        //Codecimg c("miuda_restored.png");
 
-    Codecimg c("../files/miuda.png");
+        c.compress("miuda_encoded.bin");
 
-    c.compress("miuda_encoded.bin");
-
+        c.decompress("miuda_encoded.bin", "miuda_restored.png");
+    }catch(runtime_error &e){
+        cout << e.what() << endl;
+    }
     return 0;
 }

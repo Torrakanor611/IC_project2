@@ -4,9 +4,9 @@
 
 int main(){
 
-    Codecimg c("teste");
+    Codecimg c;
 
-    c.decompress("miuda_encoded.bin");
+    c.decompress("miuda_encoded.bin", "../files/miuda1.png");
 
     return 0;
 }
