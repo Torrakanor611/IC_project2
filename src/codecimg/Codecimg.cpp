@@ -10,14 +10,17 @@ using namespace cv;
 using namespace std;
 namespace plt = matplotlibcpp;
 
+// visualization
 void showImg(const char* title, Mat m);
 void showImgHist(const char* title, Mat m);
-void showYUV(const char* title, Mat Y, Mat V, Mat U);
+void showYUVHist(const char* title, vector<int>& Y, vector<int>& V, vector<int>& U);
+//
 void apply(Mat src, vector<int>& res);
-void restoreMat(vector<int>, vector<int>& res);
 void restore(uchar* data, vector<int>& res, int nrows, int ncols);
-void printij(int i, int j);
 void reverse(uchar* src, uchar* dst, int size);
+int idealM(Golomb& g, vector<int>& resY, vector<int>& resU, vector<int>& resV);
+// aux
+void printij(int i, int j);
 
 Codecimg::Codecimg(){}
 
@@ -32,41 +35,57 @@ Codecimg::Codecimg(const char *filename){
 }
 
 void Codecimg::transformYUV420(Mat m){
-    // Y = 0.299R + 0.587G + 0.114B
-    // Cb = 128 − 0.168736R − 0.331264G + 0.5B
-    // Cr = 128 + 0.5R − 0.418688G − 0.081312B
     Y = Mat(m.size(), CV_8UC1);
     U = Mat(m.size(), CV_8UC1);
     V = Mat(m.size(), CV_8UC1);
+    int jj = 0;
     Vec3b aux;
     for(int i = 0; i < m.rows ; i++)
         for(int j = 0; j < m.cols; j++){
             aux = m.at<Vec3b>(i, j);
+            // Y = 0.299R + 0.587G + 0.114B
+            // Cb = 128 − 0.168736R − 0.331264G + 0.5B
+            // Cr = 128 + 0.5R − 0.418688G − 0.081312B
             // aux[0] -> b // aux[1] -> g // aux[2] -> r
-            Y.at<uchar>(i, j) = 0.299 * aux[2] + 0.587 * aux[1] + 0.114 * aux[0];
-            U.at<uchar>(i, j) = 128 - 0.168736 * aux[2] - 0.331264 * aux[1] + 0.5 * aux[0];
-            V.at<uchar>(i, j) = 128 + 0.5 * aux[2] - 0.418688 * aux[1] - 0.081312 * aux[2];
+            double y, u ,v;
+            y = 0.299 * aux[2] + 0.587 * aux[1] + 0.114 * aux[0];
+            u = 128 + (-0.169) * aux[2] - 0.331 * aux[1] + 0.5 * aux[0];
+            v = 128 + 0.5 * aux[2] - 0.419 * aux[1] - 0.081 * aux[2];
+
+            Y.at<uchar>(i, j) = round(y);
+            U.at<uchar>(i, j) = round(u);
+            V.at<uchar>(i, j) = round(v);
+            
+            if(jj < 10){
+                printf("[r, g, b] = [%d, %d, %d] | ", aux[2], aux[1], aux[0]);
+                printf("[y, u, v] = [%f, %f, %f] | ", y, u, v);
+                printf("[y, u, v] = [%d, %d, %d]\n", Y.at<uchar>(i, j), U.at<uchar>(i, j), V.at<uchar>(i, j));
+                jj++;
+            }
         }  
-    resize(U, U, Size(m.cols / 2, m.rows / 2), INTER_LINEAR);
-    resize(V, V, Size(m.cols / 2, m.rows / 2), INTER_LINEAR);
+    resize(U, U, Size(m.cols / 2, m.rows / 2), INTER_NEAREST);
+    resize(V, V, Size(m.cols / 2, m.rows / 2), INTER_NEAREST);
 }
 
 void Codecimg::compress(const char *fileDst){
+    printf("started compress...\n");
+    
     vector<int> resY, resU, resV;
     apply(Y, resY);
     apply(U, resU);
     apply(V, resV);
 
-    int m = 5000;
+    // showYUVHist("residuals histogram", resY, resU, resV);
 
-    cout << "started encoding..." << endl; 
+    int m = 0;
+    Golomb g = Golomb(fileDst, 'e', m);
+    m = idealM(g, resY, resU, resV);
 
-    Golomb g(fileDst, 'e', m);
+    printf("ideal m = %d\n", m);
+
+    g.setM(m);
 
     g.encodeM(m);
-
-    printf("Y.cols = %d, Y.rows = %d\n", Y.cols, Y.rows);
-
     g.encode(Y.cols);
     g.encode(Y.rows);
 
@@ -85,13 +104,11 @@ void Codecimg::compress(const char *fileDst){
 void apply(Mat src, vector<int>& res){
     int a, b, c;
     for(int x = src.cols - 1; x > - 1; x--){
-        //printf("added to array pos1: "); printij(x, src.rows - 1); printf("\n");
         res.push_back(src.at<uchar>(src.rows - 1, x));
     }
     for(int y = src.rows - 2; y > -1 ; y--){
         for(int x = src.cols - 1; x > -1; x--){
             if(x == src.cols - 1){
-                //printf("added to array pos: "); printij(x, y); printf("\n");
                 res.push_back(src.at<uchar>(y, x));
                 continue;
             }
@@ -99,25 +116,24 @@ void apply(Mat src, vector<int>& res){
             b = src.at<uchar>(y + 1, x);
             c = src.at<uchar>(y + 1, x + 1);
             // rn = xn - ^xn
-            //printf("added to array pos: "); printij(x, y); printf("\n");
             res.push_back(src.at<uchar>(y, x) - preditorJLS(a, b, c));
         }
     }
 }
 
 void Codecimg::decompress(const char *fileSrc){
-    cout << "started decoding..." << endl; 
+    decompress(fileSrc, filename);
+}
 
-    Golomb g(fileSrc, 'd', 0);
-
+void Codecimg::decompress(const char *fileSrc, const char *fileDst){
+    printf("started decompress...\n");
+    
+    Golomb g = Golomb(fileSrc, 'd', 0);
     int m = g.decodeM();
-
     g.setM(m);
 
     int ncols = g.decode();
     int nrows = g.decode();
-
-    printf("ncols = %d, nrows = %d\n", ncols, nrows);
 
     vector<int> resY, resU, resV;
 
@@ -155,16 +171,16 @@ void Codecimg::decompress(const char *fileSrc){
     U.data = fdataU;
     V.data = fdataV;
 
-    showImg("Y restored", Y);
-    showImg("U restored", U);
-    showImg("V restored", V);
+    // showImg("Y restored", Y);
+    // showImg("U restored", U);
+    // showImg("V restored", V);
 
     Mat maux(nrows, ncols, CV_8UC3);
     transformRGB(maux);
 
     showImg("imagem restaurada", maux);
 
-    imwrite(filename, maux);
+    imwrite(fileDst, maux);
 
     printf("all ok!\n");
     exit(0);
@@ -181,49 +197,59 @@ void restore(uchar* data, vector<int>& res, int nrows, int ncols){
             data[i] = res[i];
             continue;
         }
-
         a = data[i - 1];
         b = data[i - ncols];
         c = data[i - ncols - 1];
-
         rn = res[i];
-        // printf("rn = %d", rn);
-
         xCn = preditorJLS(a, b, c);
-        // printf("xCn = %d", xCn);
-
         data[i] = (uchar) rn + xCn;
-        // printf("data = %d", dataY[i]);
-        // if(i == (20 * nrows + 26) - 1){
-        //     printf("rn = %d\n", rn);
-        //     printf("xCn = %d\n", xCn);
-        //     printf("data = %d\n", dataY[i]);
-        // } 
     }
 }
 
 void Codecimg::transformRGB(Mat &m){
-    resize(U, U, Size(U.cols * 2, U.rows * 2), INTER_LINEAR);
-    resize(V, V, Size(V.cols * 2, V.rows * 2), INTER_LINEAR);
+    // resize U, V components to Y size 
+    resize(U, U, Size(U.cols * 2, U.rows * 2), INTER_NEAREST);
+    resize(V, V, Size(V.cols * 2, V.rows * 2), INTER_NEAREST);
 
-    // showImg("U resized", U);
-    // showImg("V resized", V);
-
-    uchar Yp, Up, Vp;
+    uchar Yp, u, v;
     Vec3b bgr;
+    int jj = 0;
 
     for(int y = 0; y < Y.rows; y++)
         for(int x = 0; x < Y.cols; x++){
             Yp = Y.at<uchar>(y, x);
-            Up = U.at<uchar>(y, x);
-            Vp = V.at<uchar>(y, x);
+            u = U.at<uchar>(y, x);
+            v = V.at<uchar>(y, x);
             
-            bgr[2] = Yp + 1.400 * (Vp - 128);
-            bgr[1] = Yp - 0.343 * (Up - 128) - 0.711 * (Vp - 128);
-            bgr[0] = Yp + 1.765 * (Up - 128);
+            bgr[2] = Yp + 1.400 * (v - 128);
+            bgr[1] = Yp - 0.343 * (u - 128) - 0.711 * (v - 128);
+            bgr[0] = Yp + 1.765 * (u - 128);
 
             m.at<Vec3b>(y, x) = bgr;
+
+            if(jj < 10){
+                printf("[y, u, v] = [%d, %d, %d] | ", Yp, u, v);
+                printf("[r, g, b] = [%d, %d, %d]\n", bgr[2], bgr[1], bgr[0]);
+                jj++;
+            }
         }
+}
+
+int idealM(Golomb& g, vector<int>& resY, vector<int>& resU, vector<int>& resV){
+    map<int, int> aux;
+    double med;
+    for(auto i : resY) aux[i]++;
+    for(auto i : resU) aux[i]++;
+    for(auto i : resV) aux[i]++;
+
+    int samples = 0;
+    for(auto i : aux)
+        samples += i.second;
+
+    for(auto i : aux)
+        med += g.fold(i.first) * ((double)i.second / samples);
+
+    return ceil(-1 / log2(med / (med + 1)));
 }
 
 void reverse(uchar* src, uchar* dst, int size){
@@ -270,8 +296,8 @@ void showImg(const char* title, Mat m){
     // destroyAllWindows();
 }
 
-void showYUV(const char* title, Mat Y, Mat V, Mat U){
-    Mat m;
+void showYUVHist(const char* title, vector<int>& Y, vector<int>& V, vector<int>& U){
+    vector<int> m;
     // histogram
     map<int, int> hist;
     for(int x = 0; x < 3; x++){
@@ -281,11 +307,8 @@ void showYUV(const char* title, Mat Y, Mat V, Mat U){
             m = U;
         else
             m = V;
-        for(int i = 0; i < m.rows; i++)
-            for(int j = 0; j < m.cols; j++){
-                int aux = m.at<uchar>(i, j);
-                hist[aux]++;
-            }
+        for(int i = 0; i < m.size(); i++)
+            hist[m[i]]++;
     }
     vector<int> x, y;
     for(auto i: hist) {

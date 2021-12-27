@@ -12,21 +12,15 @@ class Codecimg{
         char* filename;
         Mat Y, U, V;
         // ideal m
-        void idealM(int pM);
         void transformYUV420(Mat m);
         void transformRGB(Mat &m);
-
-        void applyPredJLS();
-        // filename -> nome do fich codificado
-        void encode(const char *filename);
-        // filename -> nome do fich descodificado
-        void decode(const char *filename);
 
     public:
         Codecimg();
         Codecimg(const char *filename);
         void compress(const char *fileDst);
         void decompress(const char *fileSrc);
+        void decompress(const char *fileSrc, const char *fileDst);
 };
 
 #endif
