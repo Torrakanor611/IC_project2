@@ -4,32 +4,31 @@
 int main(){
 
     // Codecaud c("../files/sample01.wav");
-    Codecaud c("../../IC/P1/wavefiles/sample05.wav");
+    Codecaud c("../../IC/P1/wavefiles/sample01.wav");
 
-    char op1 = 0;
-    while(!(op1 == '1' || op1 == '2')) {
-        cout << "Choose codec option (1 for lossless or 2 for lossy): ";
+    int op1 = -1;
+    while(!(op1 == 0 || op1 == 1)) {
+        cout << "Choose codec option (0 for lossless or 1 for lossy): ";
         cin >> op1;
     }
+    int op2 = 0;
+    while(op2 < 1 || op2 > 3) {
+        cout << "Choose the predictor (1, 2 or 3): ";
+        cin >> op2;
+    }
     
-    if(op1 == '2') {
-        c.compress("compress.bin", 1, 1);
-        printf("ok compress (lossy)\n\n");
-    }
-    else{
-        c.compress("compress.bin", 1, 0);
-        printf("ok compress (lossless)\n\n");
-    }
+    c.compress("compress.bin", op2, op1);
+    printf("ok compress\n\n");
 
     c.decompress("compress.bin");
     printf("ok decompress\n\n");
 
-    char op2 = 0;
-    while(!(op2 == 'y' || op2 == 'n')) {
+    char op3 = 0;
+    while(!(op3 == 'y' || op3 == 'n')) {
         cout << "Calculate the histograms and entropy value of the residuals (y/n)? ";
-        cin >> op2;
+        cin >> op3;
     }
-    if(op2 == 'y') {
+    if(op3 == 'y') {
         c.showHistEnt();
     }
     return 0;

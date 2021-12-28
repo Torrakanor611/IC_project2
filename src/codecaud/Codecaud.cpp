@@ -37,9 +37,9 @@ void Codecaud::compress(const char *fileDst, int num, bool lossy) {
     ninput = num;
 
     if(lossy)
-        rn = preditorLossy(chs);
+        preditorLossy(chs);
     else
-        rn = preditor(chs);
+        preditor(chs);
     
     cout << "started encoding..." << endl; 
 
@@ -65,7 +65,7 @@ void Codecaud::compress(const char *fileDst, int num, bool lossy) {
     g.close();
 }
 
-vector<short> Codecaud:: preditor(vector<short> vetSrc) {
+void Codecaud:: preditor(vector<short> vetSrc) {
     vector<short> left;
     vector<short> right;
     for(int i = 0; i < chs.size()-1; i+=2){
@@ -117,11 +117,9 @@ vector<short> Codecaud:: preditor(vector<short> vetSrc) {
             rn.push_back(right[i]-xnr[i]);
         }
     }
-    return rn;
 }
 
-vector<short> Codecaud:: preditorLossy(vector<short> vetSrc) {
-
+void Codecaud:: preditorLossy(vector<short> vetSrc) {
     vector<short> left;
     vector<short> right;
     for(int i = 0; i < chs.size()-1; i+=2){
@@ -140,38 +138,45 @@ vector<short> Codecaud:: preditorLossy(vector<short> vetSrc) {
             else {
                 xnl.push_back(left[i-1]);
                 xnr.push_back(right[i-1]);
+            }
             rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
             rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
-            left[i] = ((rn[2*i] + left[i]));
-            right[i] = ((rn[2*i+1] + right[i]));
-            }
+            left[i] = rn[2*i] + xnl[i];
+            right[i] = rn[2*i+1] + xnr[i];
         }
     }
-    // else if(ninput == 2) {
-    //     for(int i = 0; i < left.size(); i++) {
-    //         if(i == 0 || i == 1) {
-    //             xn.push_back(0);
-    //         }
-    //         else {
-    //             xn.push_back((int) (2*vetSrc[i-1] - vetSrc[i-2]));
-    //         }
-    //         rn.push_back((((vetSrc[i] - xn[i]) >> 10) << 10));
-    //         vetSrc[i] = ((rn[i] + xn[i]));
-    //     }
-    // }
-    // else {
-    //     for(int i = 0; i < left.size(); i++) {
-    //         if(i == 0 || i == 1 || i == 2) {
-    //             xn.push_back(0);
-    //         }
-    //         else {
-    //             xn.push_back((int) (3*vetSrc[i-1] - 3*vetSrc[i-2] + vetSrc[i-3]));
-    //         }
-    //         rn.push_back((((vetSrc[i] - xn[i]) >> 10) << 10));
-    //         vetSrc[i] = (rn[i] + xn[i]);
-    //     }
-    // }
-    return rn;
+    else if(ninput == 2) {
+        for(int i = 0; i < left.size(); i++) {
+            if(i == 0 || i == 1) {
+                xnl.push_back(0);
+                xnr.push_back(0);
+            }
+            else {
+                xnl.push_back(2*left[i-1] - left[i-2]);
+                xnr.push_back(2*right[i-1] - right[i-2]);
+            }
+            rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
+            rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
+            left[i] = rn[2*i] + xnl[i];
+            right[i] = rn[2*i+1] + xnr[i];
+        }
+    }
+    else {
+        for(int i = 0; i < left.size(); i++) {
+            if(i == 0 || i == 1 || i == 2) {
+                xnl.push_back(0);
+                xnr.push_back(0);
+            }
+            else {
+                xnl.push_back(3*left[i-1] - 3*left[i-2] + left[i-3]);
+                xnr.push_back(3*right[i-1] - 3*right[i-2] + right[i-3]);
+            }
+            rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
+            rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
+            left[i] = rn[2*i] + xnl[i];
+            right[i] = rn[2*i+1] + xnr[i];
+        }
+    }
 }
 
 void Codecaud::decompress(const char *fileSrc) {
@@ -252,12 +257,6 @@ void Codecaud::decompress(const char *fileSrc) {
             resXN.push_back(resXr[i]);
         }
     }
-
-    // for(int i = 0; i < resXN.size(); i++)  {
-    //     if(resXN[i] != chs[i]) {
-    //         cout << "=!" << endl;
-    //     }
-    // }
 
     SF_INFO sfinfoOut ;
     sfinfoOut.channels = infoDeco[3];
