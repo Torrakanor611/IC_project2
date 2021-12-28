@@ -3,8 +3,7 @@
 
 int main(){
 
-    // Codecaud c("../files/sample01.wav");
-    Codecaud c("../../IC/P1/wavefiles/sample01.wav");
+    Codecaud c("../files/sample01.wav");
 
     int op1 = -1;
     while(!(op1 == 0 || op1 == 1)) {
