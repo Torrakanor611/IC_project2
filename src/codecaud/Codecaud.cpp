@@ -32,47 +32,15 @@ Codecaud::Codecaud(const char *filename){
 	sf_close (infile) ;  
 }
 
-void Codecaud::compress(const char *fileDst, int num) {
+void Codecaud::compress(const char *fileDst, int num, bool lossy) {
 
     ninput = num;
-    
-    // predictor
-    vector<int> xn;
-    
-    if(ninput == 1) {
-        for(int i = 0; i < chs.size(); i++) {
-            if(i == 0) {
-                xn.push_back(0);
-            }
-            else {
-                xn.push_back(chs[i-1]);
-            }
-            rn.push_back(chs[i]-xn[i]);
-        }
-    }
-    else if(ninput == 2) {
-        for(int i = 0; i < chs.size(); i++) {
-            if(i == 0 || i == 1) {
-                xn.push_back(0);
-            }
-            else {
-                xn.push_back((int) (2*chs[i-1] - chs[i-2]));
-            }
-            rn.push_back(chs[i]-xn[i]);
-        }
-    }
-    else {
-        for(int i = 0; i < chs.size(); i++) {
-            if(i == 0 || i == 1 || i == 2) {
-                xn.push_back(0);
-            }
-            else {
-                xn.push_back((int) (3*chs[i-1] - 3*chs[i-2] + chs[i-3]));
-            }
-            rn.push_back(chs[i]-xn[i]);
-        }
-    }
 
+    if(lossy)
+        preditorLossy(chs);
+    else
+        preditor(chs);
+    
     cout << "started encoding..." << endl; 
 
     // Golomb
@@ -94,7 +62,121 @@ void Codecaud::compress(const char *fileDst, int num) {
     for(int i = 0; i < rn.size(); i++) {
         g.encode(rn[i]);
     } 
-    g.close(); 
+    g.close();
+}
+
+void Codecaud:: preditor(vector<short> vetSrc) {
+    vector<short> left;
+    vector<short> right;
+    for(int i = 0; i < chs.size()-1; i+=2){
+        left.push_back(chs[i]);
+        right.push_back(chs[i+1]);
+    }
+
+    vector<short> xnl, xnr;
+
+    if(ninput == 1) {
+        for(int i = 0; i < left.size(); i++) {
+            if(i == 0) {
+                xnl.push_back(0);
+                xnr.push_back(0);
+            }
+            else {
+                xnl.push_back(left[i-1]);
+                xnr.push_back(right[i-1]);
+            }
+            rn.push_back(left[i]-xnl[i]);
+            rn.push_back(right[i]-xnr[i]);
+        }
+    }
+    else if(ninput == 2) {
+        for(int i = 0; i < left.size(); i++) {
+            if(i == 0 || i == 1) {
+                xnl.push_back(0);
+                xnr.push_back(0);
+            }
+            else {
+                xnl.push_back(2*left[i-1] - left[i-2]);
+                xnr.push_back(2*right[i-1] - right[i-2]);
+            }
+            rn.push_back(left[i]-xnl[i]);
+            rn.push_back(right[i]-xnr[i]);
+        }
+    }
+    else {
+        for(int i = 0; i < left.size(); i++) {
+            if(i == 0 || i == 1 || i == 2) {
+                xnl.push_back(0);
+                xnr.push_back(0);
+            }
+            else {
+                xnl.push_back(3*left[i-1] - 3*left[i-2] + left[i-3]);
+                xnr.push_back(3*right[i-1] - 3*right[i-2] + right[i-3]);
+            }
+            rn.push_back(left[i]-xnl[i]);
+            rn.push_back(right[i]-xnr[i]);
+        }
+    }
+}
+
+void Codecaud:: preditorLossy(vector<short> vetSrc) {
+    vector<short> left;
+    vector<short> right;
+    for(int i = 0; i < chs.size()-1; i+=2){
+        left.push_back(chs[i]);
+        right.push_back(chs[i+1]);
+    }
+
+    vector<int> xnr, xnl;
+    
+    if(ninput == 1) {
+        for(int i = 0; i < left.size(); i++) {
+            if(i == 0) {
+                xnr.push_back(0);
+                xnl.push_back(0);
+            }
+            else {
+                xnl.push_back(left[i-1]);
+                xnr.push_back(right[i-1]);
+            }
+            rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
+            rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
+            left[i] = rn[2*i] + xnl[i];
+            right[i] = rn[2*i+1] + xnr[i];
+        }
+    }
+    else if(ninput == 2) {
+        for(int i = 0; i < left.size(); i++) {
+            if(i == 0 || i == 1) {
+                xnl.push_back(0);
+                xnr.push_back(0);
+            }
+            else {
+                xnl.push_back(2*left[i-1] - left[i-2]);
+                xnr.push_back(2*right[i-1] - right[i-2]);
+            }
+            rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
+            rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
+            left[i] = rn[2*i] + xnl[i];
+            right[i] = rn[2*i+1] + xnr[i];
+        }
+    }
+    else {
+        for(int i = 0; i < left.size(); i++) {
+            if(i == 0 || i == 1 || i == 2) {
+                xnl.push_back(0);
+                xnr.push_back(0);
+            }
+            else {
+                xnl.push_back(3*left[i-1] - 3*left[i-2] + left[i-3]);
+                xnr.push_back(3*right[i-1] - 3*right[i-2] + right[i-3]);
+            }
+            rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
+            rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
+            left[i] = rn[2*i] + xnl[i];
+            right[i] = rn[2*i+1] + xnr[i];
+        }
+    }
 }
 
 void Codecaud::decompress(const char *fileSrc) {
@@ -109,42 +191,70 @@ void Codecaud::decompress(const char *fileSrc) {
     int infoDeco[4]; 
     g.decodeHeaderSound(infoDeco);
 
-    vector<int> resChs;
+    vector<short> resChs;
+    vector<short> resl, resr;
+    vector<short> resXl, resXr;
 
     for(int i = 0; i < infoDeco[0]*infoDeco[3]; i++) {
         resChs.push_back(g.decode());
     }
 
+    for(int i = 0; i < resChs.size()-1; i+=2){
+        resl.push_back(resChs[i]);
+        resr.push_back(resChs[i+1]);
+    }
+
     g.close();
 
-    // preditor
     vector<short> resXN;
-    vector<int> resHatXN; 
+    vector<short> resHatXl, resHatXr; 
     
     if(ninput == 1) {
-        resXN.push_back(resChs[0]);
-        for(int i = 1; i < resChs.size(); i++) {
-            resXN.push_back((short) resChs[i] + resXN[i-1]);
+        resXl.push_back(resl[0]);
+        resXr.push_back(resr[0]);
+        resXN.push_back(resl[0]);
+        resXN.push_back(resr[0]);
+        for(int i = 1; i < resl.size(); i++) {
+            resXl.push_back((short) resl[i] + resXl[i-1]);
+            resXr.push_back((short) resr[i] + resXr[i-1]);
+            resXN.push_back(resXl[i]);
+            resXN.push_back(resXr[i]);
         }
     }
     else if(ninput == 2) {
         for(int i = 0; i < 2; i++) {
-            resHatXN.push_back(0);
-            resXN.push_back((short) resChs[i] + resHatXN[i]);
+            resHatXl.push_back(0);
+            resHatXr.push_back(0);
+            resXl.push_back(resl[i]);
+            resXr.push_back(resr[i]);
+            resXN.push_back(resXl[i]);
+            resXN.push_back(resXr[i]);
         }
-        for(int i = 2; i < resChs.size(); i++) {
-            resHatXN.push_back((int) (2*resXN[i-1] - resXN[i-2]));
-            resXN.push_back((short) resChs[i] + resHatXN[i]);
+        for(int i = 2; i < resl.size(); i++) {
+            resHatXl.push_back((int) (2*resXl[i-1] - resXl[i-2]));
+            resHatXr.push_back((int) (2*resXr[i-1] - resXr[i-2]));
+            resXl.push_back((short) resl[i] + resHatXl[i]);
+            resXr.push_back((short) resr[i] + resHatXr[i]);
+            resXN.push_back(resXl[i]);
+            resXN.push_back(resXr[i]);
         }
     }
     else {
         for(int i = 0; i < 3; i++) {
-            resHatXN.push_back(0);
-            resXN.push_back((short) resChs[i] + resHatXN[i]);
+            resHatXl.push_back(0);
+            resHatXr.push_back(0);
+            resXl.push_back(resl[i]);
+            resXr.push_back(resr[i]);
+            resXN.push_back(resXl[i]);
+            resXN.push_back(resXr[i]);
         }
-        for(int i = 3; i < resChs.size(); i++) {
-            resHatXN.push_back((int) (3*resXN[i-1] - 3*resXN[i-2] + resXN[i-3]));
-            resXN.push_back((short) resChs[i] + resHatXN[i]);
+        for(int i = 3; i < resl.size(); i++) {
+            resHatXl.push_back((int) (3*resXl[i-1] - 3*resXl[i-2] + resXl[i-3]));
+            resHatXr.push_back((int) (3*resXr[i-1] - 3*resXr[i-2] + resXr[i-3]));
+            resXl.push_back((short) resl[i] + resHatXl[i]);
+            resXr.push_back((short) resr[i] + resHatXr[i]);
+            resXN.push_back(resXl[i]);
+            resXN.push_back(resXr[i]);
         }
     }
 
