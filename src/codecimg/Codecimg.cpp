@@ -36,8 +36,8 @@ Codecimg::Codecimg(const char *filename){
 
 void Codecimg::transformYUV420(Mat m){
     Y = Mat(m.size(), CV_8UC1);
-    U = Mat(m.size(), CV_8UC1);
-    V = Mat(m.size(), CV_8UC1);
+    Mat auxU = Mat(m.size(), CV_8UC1);
+    Mat auxV = Mat(m.size(), CV_8UC1);
     int jj = 0;
     Vec3b aux;
     for(int i = 0; i < m.rows ; i++)
@@ -52,19 +52,75 @@ void Codecimg::transformYUV420(Mat m){
             u = 128 + (-0.169) * aux[2] - 0.331 * aux[1] + 0.5 * aux[0];
             v = 128 + 0.5 * aux[2] - 0.419 * aux[1] - 0.081 * aux[2];
 
-            Y.at<uchar>(i, j) = round(y);
-            U.at<uchar>(i, j) = round(u);
-            V.at<uchar>(i, j) = round(v);
+            Y.at<uchar>(i, j) = y;
+            auxU.at<uchar>(i, j) = u;
+            auxV.at<uchar>(i, j) = v;
             
             if(jj < 10){
                 printf("[r, g, b] = [%d, %d, %d] | ", aux[2], aux[1], aux[0]);
                 printf("[y, u, v] = [%f, %f, %f] | ", y, u, v);
-                printf("[y, u, v] = [%d, %d, %d]\n", Y.at<uchar>(i, j), U.at<uchar>(i, j), V.at<uchar>(i, j));
+                printf("[y, u, v] = [%d, %d, %d]\n", Y.at<uchar>(i, j), auxU.at<uchar>(i, j), auxV.at<uchar>(i, j));
                 jj++;
             }
         }  
-    resize(U, U, Size(m.cols / 2, m.rows / 2), INTER_NEAREST);
-    resize(V, V, Size(m.cols / 2, m.rows / 2), INTER_NEAREST);
+    // resize(U, U, Size(m.cols / 2, m.rows / 2), INTER_LINEAR);
+    // resize(V, V, Size(m.cols / 2, m.rows / 2), INTER_LINEAR_EXACT);
+
+    jj = 0;
+
+    printf("U.rows: %d, U.cols: %d\n", U.rows, U.cols);
+
+    U = Mat(m.rows/2, m.cols/2, CV_8UC1);
+    V = Mat(m.rows/2, m.cols/2, CV_8UC1);
+
+    printf("U component: \n");
+    for(int y = auxU.rows - 1; y > auxU.rows - 5; y--){
+        for(int x = auxU.cols - 1; x > auxU.cols - 5; x-- ){
+            printf("%3d", auxU.at<uchar>(y, x));
+            printf(" - ");
+        }
+        printf("\n");
+    }
+
+    uchar bl, br, tr, tl;
+    int sum, med;
+
+    for(int y = 0; y < auxU.rows - 1; y += 2)
+        for(int x = 0; x < auxU.cols - 1; x += 2){
+            bl = auxU.at<uchar>(y, x);
+            br = auxU.at<uchar>(y + 1, x);
+            tr = auxU.at<uchar>(y, x + 1);
+            tl = auxU.at<uchar>(y + 1 , x + 1);
+
+            sum = bl + br + tl + tr;
+
+            med = round((double) sum / 4);
+
+            U.at<uchar>(y/2, x/2) = med;
+
+            bl = auxV.at<uchar>(y, x);
+            br = auxV.at<uchar>(y + 1, x);
+            tr = auxV.at<uchar>(y, x + 1);
+            tl = auxV.at<uchar>(y + 1 , x + 1);
+
+            sum = bl + br + tl + tr;
+
+            med = round((double) sum / 4);
+
+            V.at<uchar>(y/2, x/2) = med;
+        }
+
+    printf("U component after risize: \n");
+    for(int y = U.rows - 1; y > U.rows - 3; y--){
+        for(int x = U.cols - 1; x > U.cols - 3; x-- ){
+            printf("%3d", U.at<uchar>(y, x));
+            printf(" - ");
+        }
+        printf("\n");
+    }
+
+    // showImg("U", U);
+    // showImg("V", V);
 }
 
 void Codecimg::compress(const char *fileDst){
@@ -150,16 +206,16 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     g.close();
 
     Y = Mat(nrows, ncols, CV_8UC1);
-    U = Mat(nrows/2, ncols/2, CV_8UC1);
-    V = Mat(nrows/2, ncols/2, CV_8UC1);
+    Mat auxU = Mat(nrows/2, ncols/2, CV_8UC1);
+    Mat auxV = Mat(nrows/2, ncols/2, CV_8UC1);
 
     uchar dataY[Y.rows * Y.cols], fdataY[Y.rows * Y.cols];
     uchar dataU[U.rows * U.cols], fdataU[U.rows * U.cols];
     uchar dataV[V.rows * V.cols], fdataV[V.rows * V.cols];
 
     restore(dataY, resY, Y.rows, Y.cols);
-    restore(dataU, resU, U.rows, U.cols);
-    restore(dataV, resV, V.rows, V.cols);
+    restore(dataU, resU, auxU.rows, auxU.cols);
+    restore(dataV, resV, auxV.rows, auxV.cols);
 
     int aux = Y.rows * Y.cols;
 
@@ -168,15 +224,11 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     reverse(dataV, fdataV, aux/4);
 
     Y.data = fdataY;
-    U.data = fdataU;
-    V.data = fdataV;
-
-    // showImg("Y restored", Y);
-    // showImg("U restored", U);
-    // showImg("V restored", V);
+    auxU.data = fdataU;
+    auxV.data = fdataV;
 
     Mat maux(nrows, ncols, CV_8UC3);
-    transformRGB(maux);
+    transformRGB(maux, auxU, auxV);
 
     showImg("imagem restaurada", maux);
 
@@ -206,12 +258,55 @@ void restore(uchar* data, vector<int>& res, int nrows, int ncols){
     }
 }
 
-void Codecimg::transformRGB(Mat &m){
-    // resize U, V components to Y size 
-    resize(U, U, Size(U.cols * 2, U.rows * 2), INTER_NEAREST);
-    resize(V, V, Size(V.cols * 2, V.rows * 2), INTER_NEAREST);
+void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
+    printf("U component: \n");
+    for(int y = auxU.rows - 1; y > auxU.rows - 3; y--){
+        for(int x = auxU.cols - 1; x > auxU.cols - 3; x-- ){
+            printf("%3d", U.at<uchar>(y, x));
+            printf(" - ");
+        }
+        printf("\n");
+    }
 
-    uchar Yp, u, v;
+    U = Mat(m.rows, m.cols, CV_8UC1);
+    V = Mat(m.rows, m.cols, CV_8UC1);
+
+    uchar u, v;
+    int xx = 0, yy = 0;
+
+    printf("U.rows: %d, U.cols: %d\n", U.rows, U.cols);
+
+
+    for(int y = 0; y < auxU.rows; y++){
+        for(int x = 0; x < auxU.cols; x++){
+            u = auxU.at<uchar>(y, x);
+            v = auxV.at<uchar>(y, x);
+
+            xx = x*2;
+            yy = y*2;
+
+            U.at<uchar>(yy, xx) = u;
+            U.at<uchar>(yy + 1, xx) = u;
+            U.at<uchar>(yy, xx + 1) = u;
+            U.at<uchar>(yy + 1, xx + 1) = u;
+
+            V.at<uchar>(yy, xx) = v;
+            V.at<uchar>(yy + 1, xx) = v;
+            V.at<uchar>(yy, xx + 1) = v;
+            V.at<uchar>(yy + 1, xx + 1) = v;
+        }
+    }
+
+    printf("U component: \n");
+    for(int y = U.rows - 1; y > U.rows - 5; y--){
+        for(int x = U.cols - 1; x > U.cols - 5; x--){
+            printf("%3d", U.at<uchar>(y, x));
+            printf(" - ");
+        }
+        printf("\n");
+    }
+
+    uchar Yp;
     Vec3b bgr;
     int jj = 0;
 

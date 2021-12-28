@@ -13,7 +13,7 @@ class Codecimg{
         Mat Y, U, V;
         // ideal m
         void transformYUV420(Mat m);
-        void transformRGB(Mat &m);
+        void transformRGB(Mat &m, Mat &auxU, Mat &auxV);
 
     public:
         Codecimg();
