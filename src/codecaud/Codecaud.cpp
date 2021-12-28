@@ -32,47 +32,22 @@ Codecaud::Codecaud(const char *filename){
 	sf_close (infile) ;  
 }
 
-void Codecaud::compress(const char *fileDst, int num) {
+void Codecaud::compress(const char *fileDst, int num, bool lossy) {
 
     ninput = num;
+    vector<short> xn = preditor(chs);
+    vector<short> qnt;
+    for(int i = 0; i < xn.size(); i++) {
+        rn.push_back(chs[i]-xn[i]);
+    }
+    if(lossy) {
+        for(int i = 0; i < chs.size(); i++) {
+            qnt.push_back(rn[i] >> 1);
+            // rn[i] = qnt[i] + xn[i];
+        }
+        rn = preditor(qnt);
+    }
     
-    // predictor
-    vector<int> xn;
-    
-    if(ninput == 1) {
-        for(int i = 0; i < chs.size(); i++) {
-            if(i == 0) {
-                xn.push_back(0);
-            }
-            else {
-                xn.push_back(chs[i-1]);
-            }
-            rn.push_back(chs[i]-xn[i]);
-        }
-    }
-    else if(ninput == 2) {
-        for(int i = 0; i < chs.size(); i++) {
-            if(i == 0 || i == 1) {
-                xn.push_back(0);
-            }
-            else {
-                xn.push_back((int) (2*chs[i-1] - chs[i-2]));
-            }
-            rn.push_back(chs[i]-xn[i]);
-        }
-    }
-    else {
-        for(int i = 0; i < chs.size(); i++) {
-            if(i == 0 || i == 1 || i == 2) {
-                xn.push_back(0);
-            }
-            else {
-                xn.push_back((int) (3*chs[i-1] - 3*chs[i-2] + chs[i-3]));
-            }
-            rn.push_back(chs[i]-xn[i]);
-        }
-    }
-
     cout << "started encoding..." << endl; 
 
     // Golomb
@@ -94,7 +69,43 @@ void Codecaud::compress(const char *fileDst, int num) {
     for(int i = 0; i < rn.size(); i++) {
         g.encode(rn[i]);
     } 
-    g.close(); 
+    g.close();
+}
+
+vector<short> Codecaud:: preditor(vector<short> vetSrc) {
+    vector<short> xn;
+    
+    if(ninput == 1) {
+        for(int i = 0; i < vetSrc.size(); i++) {
+            if(i == 0) {
+                xn.push_back(0);
+            }
+            else {
+                xn.push_back(vetSrc[i-1]);
+            }
+        }
+    }
+    else if(ninput == 2) {
+        for(int i = 0; i < vetSrc.size(); i++) {
+            if(i == 0 || i == 1) {
+                xn.push_back(0);
+            }
+            else {
+                xn.push_back((int) (2*vetSrc[i-1] - vetSrc[i-2]));
+            }
+        }
+    }
+    else {
+        for(int i = 0; i < vetSrc.size(); i++) {
+            if(i == 0 || i == 1 || i == 2) {
+                xn.push_back(0);
+            }
+            else {
+                xn.push_back((int) (3*vetSrc[i-1] - 3*vetSrc[i-2] + vetSrc[i-3]));
+            }
+        }
+    }
+    return xn;
 }
 
 void Codecaud::decompress(const char *fileSrc) {
@@ -147,6 +158,12 @@ void Codecaud::decompress(const char *fileSrc) {
             resXN.push_back((short) resChs[i] + resHatXN[i]);
         }
     }
+
+    // for(int i = 0; i < resXN.size(); i++)  {
+    //     if(resXN[i] != chs[i]) {
+    //         cout << "=!" << endl;
+    //     }
+    // }
 
     SF_INFO sfinfoOut ;
     sfinfoOut.channels = infoDeco[3];
