@@ -4,7 +4,7 @@
 int main(){
 
     // Codecaud c("../files/sample01.wav");
-    Codecaud c("../../IC/P1/wavefiles/sample02.wav");
+    Codecaud c("../../IC/P1/wavefiles/sample05.wav");
 
     char op1 = 0;
     while(!(op1 == '1' || op1 == '2')) {
@@ -26,7 +26,7 @@ int main(){
 
     char op2 = 0;
     while(!(op2 == 'y' || op2 == 'n')) {
-        cout << "Calculate the histograms and entropy value of the residuals? (y/n)" << endl;
+        cout << "Calculate the histograms and entropy value of the residuals (y/n)? ";
         cin >> op2;
     }
     if(op2 == 'y') {
