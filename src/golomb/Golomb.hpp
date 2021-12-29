@@ -102,6 +102,18 @@ class Golomb {
          **/
         void decodeHeaderSound(int arr[]);
 
+        /**
+         * Encode mode image header
+         * @param mode 0 -> lossless, 1 -> lossy
+         * */
+        void encodeMode(int mode);
+
+        /**
+         * Decode mode image header
+         * @return mode  0 -> lossless, 1 -> lossy
+         * */
+        int decodeMode();
+
     private:
         BitStream Gfile; 
         int m; 

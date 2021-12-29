@@ -253,13 +253,13 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     vector<int> resY, resU, resV;
 
     for(int i = 0; i < ncols*nrows; i++){
-        resY.push_back(g.decode() << 5);
+        resY.push_back(g.decode());
     }
     for(int i = 0; i < (ncols/2)*(nrows/2); i++){
-        resU.push_back(g.decode() << 5);
+        resU.push_back(g.decode());
     }
     for(int i = 0; i < (ncols/2)*(nrows/2); i++){
-        resV.push_back(g.decode() << 5);
+        resV.push_back(g.decode());
     }
 
     g.close();

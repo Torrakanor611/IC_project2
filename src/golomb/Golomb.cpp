@@ -210,6 +210,16 @@ int Golomb::decodeShamt(){
     return convertToInt(shamt,5);
 }
 
+void Golomb::encodeMode(int mode){
+    char x = (mode == 0) ? '0' : '1';
+    Gfile.writeBit(x);
+}
+
+
+int Golomb::decodeMode(){
+    return (int) (Gfile.readBit() & 0x01);
+}
+
 
 
 

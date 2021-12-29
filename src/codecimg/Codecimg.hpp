@@ -14,11 +14,10 @@ class Codecimg{
         // ideal m
         void transformYUV420(Mat m);
         void transformRGB(Mat &m, Mat &auxU, Mat &auxV);
-        int mode;
 
     public:
         Codecimg();
-        Codecimg(const char *filename, int mode);
+        Codecimg(const char *filename);
         void compress(const char *fileDst);
         void compresslossy(const char *fileDst, int qy, int qu, int qv);
         void decompress(const char *fileSrc);
