@@ -5,15 +5,13 @@
 int main(int argc, char* argv[]){
 
     //Command line arguments processing
-    /*DESCOMENTAR NA VERSÂO FINAL
     if(argc != 2){
         cout << "\033[1;31mError: Following argument is required <input filename>\033[0m" << endl;
         return 0; 
     }
     char *inputfile = argv[1];
 
-    Codecaud c(inputfile);*/
-    Codecaud c("../files/sample01.wav");
+    Codecaud c(inputfile);
 
     int op1 = -1;
     while(!(op1 == 0 || op1 == 1)) {
@@ -28,7 +26,7 @@ int main(int argc, char* argv[]){
     int bits = -1;
     if(op1 == 1){
         while(bits < 0 || bits > 15) {
-            cout << "Choose quantization step(number of bits to remove): ";
+            cout << "Choose quantization step (number of bits to remove): ";
             cin >> bits;
         }
     }
@@ -37,10 +35,10 @@ int main(int argc, char* argv[]){
     c.compress("compress.bin", op2, op1, bits);
     clock_t end = clock();
     cout <<"Duration: " <<  (double(end - begin) / CLOCKS_PER_SEC) << endl;
-    printf("ok compress\n\n");
+    printf("... done encoding\n\n");
 
     c.decompress("compress.bin");
-    printf("ok decompress\n\n");
+    printf("... done decompress\n\n");
 
     char op3 = 0;
     while(!(op3 == 'y' || op3 == 'n')) {
