@@ -25,13 +25,14 @@ void printij(int i, int j);
 
 Codecimg::Codecimg(){}
 
-Codecimg::Codecimg(const char *filename){
+Codecimg::Codecimg(const char *filename, bool verb){
+    verbose = verb;
     Mat img = imread(filename, IMREAD_COLOR);
     if(img.empty()){
         throw new runtime_error("could not make mat");
     }
     this->filename = (char*) filename;
-    showImg("img original entrada", img);
+    if(verbose) showImg("img original entrada", img);
     transformYUV420(img);
 }
 
@@ -39,7 +40,7 @@ void Codecimg::transformYUV420(Mat m){
     Y = Mat(m.size(), CV_8UC1);
     Mat auxU = Mat(m.size(), CV_8UC1);
     Mat auxV = Mat(m.size(), CV_8UC1);
-    int jj = 0;
+    // int jj = 0;
     Vec3b aux;
     for(int i = 0; i < m.rows ; i++)
         for(int j = 0; j < m.cols; j++){
@@ -57,31 +58,31 @@ void Codecimg::transformYUV420(Mat m){
             auxU.at<uchar>(i, j) = u;
             auxV.at<uchar>(i, j) = v;
             
-            if(jj < 10){
-                printf("[r, g, b] = [%d, %d, %d] | ", aux[2], aux[1], aux[0]);
-                printf("[y, u, v] = [%f, %f, %f] | ", y, u, v);
-                printf("[y, u, v] = [%d, %d, %d]\n", Y.at<uchar>(i, j), auxU.at<uchar>(i, j), auxV.at<uchar>(i, j));
-                jj++;
-            }
+            // if(jj < 10){
+            //     printf("[r, g, b] = [%d, %d, %d] | ", aux[2], aux[1], aux[0]);
+            //     printf("[y, u, v] = [%f, %f, %f] | ", y, u, v);
+            //     printf("[y, u, v] = [%d, %d, %d]\n", Y.at<uchar>(i, j), auxU.at<uchar>(i, j), auxV.at<uchar>(i, j));
+            //     jj++;
+            // }
         }  
     // resize(U, U, Size(m.cols / 2, m.rows / 2), INTER_LINEAR);
     // resize(V, V, Size(m.cols / 2, m.rows / 2), INTER_LINEAR_EXACT);
 
-    jj = 0;
+    // jj = 0;
 
-    printf("U.rows: %d, U.cols: %d\n", U.rows, U.cols);
+    // printf("U.rows: %d, U.cols: %d\n", U.rows, U.cols);
 
     U = Mat(m.rows/2, m.cols/2, CV_8UC1);
     V = Mat(m.rows/2, m.cols/2, CV_8UC1);
 
-    printf("U component: \n");
-    for(int y = auxU.rows - 1; y > auxU.rows - 5; y--){
-        for(int x = auxU.cols - 1; x > auxU.cols - 5; x-- ){
-            printf("%3d", auxU.at<uchar>(y, x));
-            printf(" - ");
-        }
-        printf("\n");
-    }
+    // printf("U component: \n");
+    // for(int y = auxU.rows - 1; y > auxU.rows - 5; y--){
+    //     for(int x = auxU.cols - 1; x > auxU.cols - 5; x-- ){
+    //         printf("%3d", auxU.at<uchar>(y, x));
+    //         printf(" - ");
+    //     }
+    //     printf("\n");
+    // }
 
     uchar bl, br, tr, tl;
     int sum, med;
@@ -111,17 +112,14 @@ void Codecimg::transformYUV420(Mat m){
             V.at<uchar>(y/2, x/2) = med;
         }
 
-    printf("U component after risize: \n");
-    for(int y = U.rows - 1; y > U.rows - 3; y--){
-        for(int x = U.cols - 1; x > U.cols - 3; x-- ){
-            printf("%3d", U.at<uchar>(y, x));
-            printf(" - ");
-        }
-        printf("\n");
-    }
-
-    // showImg("U", U);
-    // showImg("V", V);
+    // printf("U component after risize: \n");
+    // for(int y = U.rows - 1; y > U.rows - 3; y--){
+    //     for(int x = U.cols - 1; x > U.cols - 3; x-- ){
+    //         printf("%3d", U.at<uchar>(y, x));
+    //         printf(" - ");
+    //     }
+    //     printf("\n");
+    // }
 }
 
 void Codecimg::compress(const char *fileDst){
@@ -132,7 +130,7 @@ void Codecimg::compress(const char *fileDst){
     apply(U, resU);
     apply(V, resV);
 
-    // showYUVHist("residuals histogram", resY, resU, resV);
+    if(verbose) showYUVHist("residuals histogram", resY, resU, resV);
 
     int m = 0;
     Golomb g = Golomb(fileDst, 'e', m);
@@ -167,13 +165,13 @@ void Codecimg::compresslossy(const char *fileDst, int qy, int qu, int qv){
     applylossy(U, resU, qu);
     applylossy(V, resV, qv);
 
-    // showYUVHist("residuals histogram", resY, resU, resV);
+    if(verbose) showYUVHist("residuals histogram", resY, resU, resV);
 
     int m = 0;
     Golomb g = Golomb(fileDst, 'e', m);
     m = idealM(g, resY, resU, resV);
 
-    printf("ideal m = %d\n", m);
+    // printf("ideal m = %d\n", m);
     g.setM(m);
 
     g.encodeMode(1);
@@ -305,10 +303,9 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     Mat maux(nrows, ncols, CV_8UC3);
     transformRGB(maux, auxU, auxV);
 
-    showImg("imagem restaurada", maux);
+    if(verbose) showImg("imagem restaurada", maux);
 
     imwrite(fileDst, maux);
-
 }
 
 
@@ -332,14 +329,14 @@ void restore(uchar* data, vector<int>& res, int nrows, int ncols){
 }
 
 void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
-    printf("U component: \n");
-    for(int y = auxU.rows - 1; y > auxU.rows - 3; y--){
-        for(int x = auxU.cols - 1; x > auxU.cols - 3; x-- ){
-            printf("%3d", U.at<uchar>(y, x));
-            printf(" - ");
-        }
-        printf("\n");
-    }
+    // printf("U component: \n");
+    // for(int y = auxU.rows - 1; y > auxU.rows - 3; y--){
+    //     for(int x = auxU.cols - 1; x > auxU.cols - 3; x-- ){
+    //         printf("%3d", U.at<uchar>(y, x));
+    //         printf(" - ");
+    //     }
+    //     printf("\n");
+    // }
 
     U = Mat(m.rows, m.cols, CV_8UC1);
     V = Mat(m.rows, m.cols, CV_8UC1);
@@ -347,7 +344,7 @@ void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
     uchar u, v;
     int xx = 0, yy = 0;
 
-    printf("U.rows: %d, U.cols: %d\n", U.rows, U.cols);
+    // printf("U.rows: %d, U.cols: %d\n", U.rows, U.cols);
 
 
     for(int y = 0; y < auxU.rows; y++){
@@ -370,18 +367,18 @@ void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
         }
     }
 
-    printf("U component: \n");
-    for(int y = U.rows - 1; y > U.rows - 5; y--){
-        for(int x = U.cols - 1; x > U.cols - 5; x--){
-            printf("%3d", U.at<uchar>(y, x));
-            printf(" - ");
-        }
-        printf("\n");
-    }
+    // printf("U component: \n");
+    // for(int y = U.rows - 1; y > U.rows - 5; y--){
+    //     for(int x = U.cols - 1; x > U.cols - 5; x--){
+    //         printf("%3d", U.at<uchar>(y, x));
+    //         printf(" - ");
+    //     }
+    //     printf("\n");
+    // }
 
     uchar Yp;
     Vec3b bgr;
-    int jj = 0;
+    // int jj = 0;
 
     for(int y = 0; y < Y.rows; y++)
         for(int x = 0; x < Y.cols; x++){
@@ -395,11 +392,11 @@ void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
 
             m.at<Vec3b>(y, x) = bgr;
 
-            if(jj < 10){
-                printf("[y, u, v] = [%d, %d, %d] | ", Yp, u, v);
-                printf("[r, g, b] = [%d, %d, %d]\n", bgr[2], bgr[1], bgr[0]);
-                jj++;
-            }
+            // if(jj < 10){
+            //     printf("[y, u, v] = [%d, %d, %d] | ", Yp, u, v);
+            //     printf("[r, g, b] = [%d, %d, %d]\n", bgr[2], bgr[1], bgr[0]);
+            //     jj++;
+            // }
         }
 }
 
