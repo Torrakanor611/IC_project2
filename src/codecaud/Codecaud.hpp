@@ -45,7 +45,7 @@ class Codecaud{
         /**
          * Lossy Preditor 
          * @param vetSrc vector that contains all the samples of the audio file.
-         * @param shamt 
+         * @param shamt number of bits to be quantized in the predictor
          */
         void preditorLossy(std::vector<short> vetSrc, int shamt);
 
