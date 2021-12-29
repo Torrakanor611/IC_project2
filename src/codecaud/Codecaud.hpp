@@ -22,17 +22,17 @@ class Codecaud{
 
         /**
          * Codecaud Class Constructor
-         * @param filename path to a audio file.
+         * @param filename path to an audio file.
          */
         Codecaud(const char *filename);
 
          /**
          * Compress audio file
          * @param filename path to a file were to store the enconded value.
-         * @param num value to choose the predictor that will be use. 
+         * @param num value to choose the order of the predictor that will be use. 
          * Choosing 1, the predictor will only consider the previous value; 2 it will consider the 2 previous values; and choosing 3 will consider the 3 previous values.
          * @param lossy value to choose between lossless (0) and lossy (1) encoding.
-         * @param shamt 
+         * @param shamt number of bits to be quantized in the predictor
          */
         void compress(const char *fileDst, int num, bool lossy, int shamt);
         
