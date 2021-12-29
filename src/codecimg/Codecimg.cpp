@@ -32,7 +32,7 @@ Codecimg::Codecimg(const char *filename, bool verb){
         throw new runtime_error("could not make mat");
     }
     this->filename = (char*) filename;
-    if(verbose) showImg("img original entrada", img);
+    if(verbose) showImgHist("image original(input)", img);
     transformYUV420(img);
 }
 
@@ -123,20 +123,20 @@ void Codecimg::transformYUV420(Mat m){
 }
 
 void Codecimg::compress(const char *fileDst){
-    printf("started compress...\n");
+    // printf("started compress...\n");
     
     vector<int> resY, resU, resV;
     apply(Y, resY);
     apply(U, resU);
     apply(V, resV);
 
-    if(verbose) showYUVHist("residuals histogram", resY, resU, resV);
+    if(verbose) showYUVHist("histogram of residuals", resY, resU, resV);
 
     int m = 0;
     Golomb g = Golomb(fileDst, 'e', m);
     m = idealM(g, resY, resU, resV);
 
-    printf("ideal m = %d\n", m);
+    // printf("ideal m = %d\n", m);
     g.setM(m);
 
     g.encodeMode(0);
@@ -158,14 +158,14 @@ void Codecimg::compress(const char *fileDst){
 }
 
 void Codecimg::compresslossy(const char *fileDst, int qy, int qu, int qv){
-    printf("started lossy compress...\n");
+    // printf("started lossy compress...\n");
     
     vector<int> resY, resU, resV;
     applylossy(Y, resY, qy);
     applylossy(U, resU, qu);
     applylossy(V, resV, qv);
 
-    if(verbose) showYUVHist("residuals histogram", resY, resU, resV);
+    if(verbose) showYUVHist("histogram of residuals", resY, resU, resV);
 
     int m = 0;
     Golomb g = Golomb(fileDst, 'e', m);
@@ -245,7 +245,7 @@ void Codecimg::decompress(const char *fileSrc){
 }
 
 void Codecimg::decompress(const char *fileSrc, const char *fileDst){
-    printf("started decompress...\n");
+    // printf("started decompress...\n");
     
     Golomb g = Golomb(fileSrc, 'd', 0);
 
@@ -303,7 +303,7 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     Mat maux(nrows, ncols, CV_8UC3);
     transformRGB(maux, auxU, auxV);
 
-    if(verbose) showImg("imagem restaurada", maux);
+    if(verbose) showImg("imagem restored(output)", maux);
 
     imwrite(fileDst, maux);
 }
@@ -435,6 +435,16 @@ void showImgHist(const char* title, Mat m){
             int aux = (int) m.at<uchar>(i, j);
             hist[aux]++;
         }
+    double entropy = 0;
+    int total = m.rows * m.cols;
+    double prob;
+    for(auto i : hist){
+        prob = ((double) i.second) / total;
+        entropy += prob * -log2(prob);
+    }
+    printf("Entropy of \"%s\": %f bits\n", title, entropy);
+
+    
     vector<int> x, y;
     for(auto i : hist) {
         x.push_back(i.first);
@@ -476,6 +486,15 @@ void showYUVHist(const char* title, vector<int>& Y, vector<int>& V, vector<int>&
         for(int i = 0; i < m.size(); i++)
             hist[m[i]]++;
     }
+    double entropy = 0;
+    int total = Y.size() + V.size() + U.size();
+    double prob;
+    for(auto i : hist){
+        prob = ((double) i.second) / total;
+        entropy += prob * -log2(prob);
+    }
+    printf("Entropy of \"%s\": %f bits\n", title, entropy);
+
     vector<int> x, y;
     for(auto i: hist) {
         x.push_back(i.first);
