@@ -55,5 +55,7 @@ we use matplotlib-cpp that is a wrapper for matplot python library
 ## Directories
 
 >files contains resources to be used in the tests
+
 >test contains tests to the several modules
+
 >src contains classes that implement the project modules
