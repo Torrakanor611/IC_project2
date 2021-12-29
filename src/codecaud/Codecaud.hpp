@@ -16,9 +16,9 @@ class Codecaud{
     public:
         Codecaud();
         Codecaud(const char *filename);
-        void compress(const char *fileDst, int num, bool lossy);
+        void compress(const char *fileDst, int num, bool lossy, int shamt);
         void preditor(std::vector<short> vetSrc);
-        void preditorLossy(std::vector<short> vetSrc);
+        void preditorLossy(std::vector<short> vetSrc, int shamt);
         void decompress(const char *fileSrc);
         void showHistEnt();
 };

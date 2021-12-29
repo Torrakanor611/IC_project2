@@ -79,13 +79,25 @@ class Golomb {
          * @param sampleRate of the audio file
          * @param Channels of the audiofile
          * @param format of the audiofile
+         * @param lossy boolean that indicates if coding option is lossy or lossless
          **/
-        void encodeHeaderSound(int nFrames, int sampleRate, int Channels, int format);
+        void encodeHeaderSound(int nFrames, int sampleRate, int Channels, int format, bool lossy);
 
+        /**
+         * Encode quantization step in binary to save it in the header of encoded file
+         * @param shamt quantization step
+         **/
+        void encondeShamt(int shamt);
+
+        /**
+         * Decode quantization step
+         * @return quantization step
+         **/
+        int decodeShamt();
 
         /**
          * Decode the binary header of the soundfile
-         * @param arr integer array of size 4 that will contain nFrames, sampleRate, numChannels and format
+         * @param arr integer array of size 5 that will contain codecopetion(lossy, lossless), nFrames, sampleRate, numChannels and format
          * 
          **/
         void decodeHeaderSound(int arr[]);

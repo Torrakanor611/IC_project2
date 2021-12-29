@@ -32,12 +32,12 @@ Codecaud::Codecaud(const char *filename){
 	sf_close (infile) ;  
 }
 
-void Codecaud::compress(const char *fileDst, int num, bool lossy) {
+void Codecaud::compress(const char *fileDst, int num, bool lossy, int shamt) {
 
     ninput = num;
 
     if(lossy)
-        preditorLossy(chs);
+        preditorLossy(chs, shamt);
     else
         preditor(chs);
     
@@ -56,8 +56,9 @@ void Codecaud::compress(const char *fileDst, int num, bool lossy) {
 
     g.setM(m);
     g.encodeM(m);
-
-    g.encodeHeaderSound(sfinfo.frames, sfinfo.samplerate, sfinfo.channels, sfinfo.format);
+    g.encodeHeaderSound(sfinfo.frames, sfinfo.samplerate, sfinfo.channels, sfinfo.format, lossy);
+    if(lossy)
+        g.encondeShamt(shamt);
     
     for(int i = 0; i < rn.size(); i++) {
         g.encode(rn[i]);
@@ -119,7 +120,7 @@ void Codecaud:: preditor(vector<short> vetSrc) {
     }
 }
 
-void Codecaud:: preditorLossy(vector<short> vetSrc) {
+void Codecaud:: preditorLossy(vector<short> vetSrc, int shamt) {
     vector<short> left;
     vector<short> right;
     for(int i = 0; i < chs.size()-1; i+=2){
@@ -139,10 +140,10 @@ void Codecaud:: preditorLossy(vector<short> vetSrc) {
                 xnl.push_back(left[i-1]);
                 xnr.push_back(right[i-1]);
             }
-            rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
-            rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
-            left[i] = rn[2*i] + xnl[i];
-            right[i] = rn[2*i+1] + xnr[i];
+            rn.push_back(((left[i]-xnl[i]) >> shamt) );
+            rn.push_back(((right[i]-xnr[i]) >> shamt) );
+            left[i] = (rn[2*i] << shamt) + xnl[i];
+            right[i] = (rn[2*i+1] << shamt) + xnr[i];
         }
     }
     else if(ninput == 2) {
@@ -155,10 +156,10 @@ void Codecaud:: preditorLossy(vector<short> vetSrc) {
                 xnl.push_back(2*left[i-1] - left[i-2]);
                 xnr.push_back(2*right[i-1] - right[i-2]);
             }
-            rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
-            rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
-            left[i] = rn[2*i] + xnl[i];
-            right[i] = rn[2*i+1] + xnr[i];
+            rn.push_back(((left[i]-xnl[i]) >> shamt) );
+            rn.push_back(((right[i]-xnr[i]) >> shamt) );
+            left[i] = (rn[2*i] << shamt) + xnl[i];
+            right[i] = (rn[2*i+1] << shamt) + xnr[i];
         }
     }
     else {
@@ -171,10 +172,10 @@ void Codecaud:: preditorLossy(vector<short> vetSrc) {
                 xnl.push_back(3*left[i-1] - 3*left[i-2] + left[i-3]);
                 xnr.push_back(3*right[i-1] - 3*right[i-2] + right[i-3]);
             }
-            rn.push_back(((left[i]-xnl[i]) >> 10) << 10);
-            rn.push_back(((right[i]-xnr[i]) >> 10) << 10);
-            left[i] = rn[2*i] + xnl[i];
-            right[i] = rn[2*i+1] + xnr[i];
+            rn.push_back(((left[i]-xnl[i]) >> shamt) );
+            rn.push_back(((right[i]-xnr[i]) >> shamt) );
+            left[i] = (rn[2*i] << shamt ) + xnl[i];
+            right[i] = (rn[2*i+1] << shamt )  + xnr[i];
         }
     }
 }
@@ -188,15 +189,22 @@ void Codecaud::decompress(const char *fileSrc) {
 
     g.setM(m);
 
-    int infoDeco[4]; 
+    int infoDeco[5]; 
     g.decodeHeaderSound(infoDeco);
 
     vector<short> resChs;
     vector<short> resl, resr;
     vector<short> resXl, resXr;
 
-    for(int i = 0; i < infoDeco[0]*infoDeco[3]; i++) {
-        resChs.push_back(g.decode());
+    //If lossy
+    if(infoDeco[0] == 1){
+        int shamt = g.decodeShamt();
+        for(int i = 0; i < infoDeco[1]*infoDeco[4]; i++)
+            resChs.push_back(g.decode() << shamt) ;
+    }
+    else{
+        for(int i = 0; i < infoDeco[1]*infoDeco[4]; i++)
+            resChs.push_back(g.decode()) ;
     }
 
     for(int i = 0; i < resChs.size()-1; i+=2){
@@ -259,10 +267,10 @@ void Codecaud::decompress(const char *fileSrc) {
     }
 
     SF_INFO sfinfoOut ;
-    sfinfoOut.channels = infoDeco[3];
-    sfinfoOut.samplerate = infoDeco[1];
-    sfinfoOut.format = infoDeco[2];
-    sfinfoOut.frames = infoDeco[0];
+    sfinfoOut.channels = infoDeco[4];
+    sfinfoOut.samplerate = infoDeco[2];
+    sfinfoOut.format = infoDeco[3];
+    sfinfoOut.frames = infoDeco[1];
 
     SNDFILE * outfile = sf_open("out.wav", SFM_WRITE, &sfinfoOut);
     sf_count_t count = sf_write_short(outfile, &resXN[0], resXN.size()) ;
