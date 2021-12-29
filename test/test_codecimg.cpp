@@ -5,7 +5,6 @@
 int main(){
     try{
         Codecimg c("../files/miuda.png");
-        //Codecimg c("miuda_restored.png");
 
         c.compress("miuda_encoded.bin");
 
