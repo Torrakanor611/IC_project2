@@ -14,7 +14,7 @@ namespace plt = matplotlibcpp;
 void showImg(const char* title, Mat m);
 void showImgHist(const char* title, Mat m);
 void showYUVHist(const char* title, vector<int>& Y, vector<int>& V, vector<int>& U);
-//
+// logic
 void apply(Mat src, vector<int>& res);
 void applylossy(Mat src, vector<int>& res, int q);
 void restore(uchar* data, vector<int>& res, int nrows, int ncols);
@@ -40,7 +40,6 @@ void Codecimg::transformYUV420(Mat m){
     Y = Mat(m.size(), CV_8UC1);
     Mat auxU = Mat(m.size(), CV_8UC1);
     Mat auxV = Mat(m.size(), CV_8UC1);
-    // int jj = 0;
     Vec3b aux;
     for(int i = 0; i < m.rows ; i++)
         for(int j = 0; j < m.cols; j++){
@@ -57,32 +56,10 @@ void Codecimg::transformYUV420(Mat m){
             Y.at<uchar>(i, j) = y;
             auxU.at<uchar>(i, j) = u;
             auxV.at<uchar>(i, j) = v;
-            
-            // if(jj < 10){
-            //     printf("[r, g, b] = [%d, %d, %d] | ", aux[2], aux[1], aux[0]);
-            //     printf("[y, u, v] = [%f, %f, %f] | ", y, u, v);
-            //     printf("[y, u, v] = [%d, %d, %d]\n", Y.at<uchar>(i, j), auxU.at<uchar>(i, j), auxV.at<uchar>(i, j));
-            //     jj++;
-            // }
         }  
-    // resize(U, U, Size(m.cols / 2, m.rows / 2), INTER_LINEAR);
-    // resize(V, V, Size(m.cols / 2, m.rows / 2), INTER_LINEAR_EXACT);
-
-    // jj = 0;
-
-    // printf("U.rows: %d, U.cols: %d\n", U.rows, U.cols);
 
     U = Mat(m.rows/2, m.cols/2, CV_8UC1);
     V = Mat(m.rows/2, m.cols/2, CV_8UC1);
-
-    // printf("U component: \n");
-    // for(int y = auxU.rows - 1; y > auxU.rows - 5; y--){
-    //     for(int x = auxU.cols - 1; x > auxU.cols - 5; x-- ){
-    //         printf("%3d", auxU.at<uchar>(y, x));
-    //         printf(" - ");
-    //     }
-    //     printf("\n");
-    // }
 
     uchar bl, br, tr, tl;
     int sum, med;
@@ -111,15 +88,6 @@ void Codecimg::transformYUV420(Mat m){
 
             V.at<uchar>(y/2, x/2) = med;
         }
-
-    // printf("U component after risize: \n");
-    // for(int y = U.rows - 1; y > U.rows - 3; y--){
-    //     for(int x = U.cols - 1; x > U.cols - 3; x-- ){
-    //         printf("%3d", U.at<uchar>(y, x));
-    //         printf(" - ");
-    //     }
-    //     printf("\n");
-    // }
 }
 
 void Codecimg::compress(const char *fileDst){
@@ -136,7 +104,6 @@ void Codecimg::compress(const char *fileDst){
     Golomb g = Golomb(fileDst, 'e', m);
     m = idealM(g, resY, resU, resV);
 
-    // printf("ideal m = %d\n", m);
     g.setM(m);
 
     g.encodeMode(0);
@@ -234,7 +201,6 @@ void applylossy(Mat src, vector<int>& res, int q){
             c = src.at<uchar>(y + 1, x + 1);
             // rn = xn - ^xn
             res.push_back((src.at<uchar>(y, x) - preditorJLS(a, b, c)) >> q);
-            // printf("%d = %d", res[(res.size())-1], )
             src.at<uchar>(y, x) = preditorJLS(a, b, c) + (res[(res.size())-1] << q);
         }
     }
@@ -246,7 +212,6 @@ void Codecimg::decompress(const char *fileSrc){
 
 void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     // printf("started decompress...\n");
-    
     Golomb g = Golomb(fileSrc, 'd', 0);
 
     int mode = g.decodeMode();
@@ -329,23 +294,11 @@ void restore(uchar* data, vector<int>& res, int nrows, int ncols){
 }
 
 void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
-    // printf("U component: \n");
-    // for(int y = auxU.rows - 1; y > auxU.rows - 3; y--){
-    //     for(int x = auxU.cols - 1; x > auxU.cols - 3; x-- ){
-    //         printf("%3d", U.at<uchar>(y, x));
-    //         printf(" - ");
-    //     }
-    //     printf("\n");
-    // }
-
     U = Mat(m.rows, m.cols, CV_8UC1);
     V = Mat(m.rows, m.cols, CV_8UC1);
 
     uchar u, v;
     int xx = 0, yy = 0;
-
-    // printf("U.rows: %d, U.cols: %d\n", U.rows, U.cols);
-
 
     for(int y = 0; y < auxU.rows; y++){
         for(int x = 0; x < auxU.cols; x++){
@@ -366,19 +319,8 @@ void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
             V.at<uchar>(yy + 1, xx + 1) = v;
         }
     }
-
-    // printf("U component: \n");
-    // for(int y = U.rows - 1; y > U.rows - 5; y--){
-    //     for(int x = U.cols - 1; x > U.cols - 5; x--){
-    //         printf("%3d", U.at<uchar>(y, x));
-    //         printf(" - ");
-    //     }
-    //     printf("\n");
-    // }
-
     uchar Yp;
     Vec3b bgr;
-    // int jj = 0;
 
     for(int y = 0; y < Y.rows; y++)
         for(int x = 0; x < Y.cols; x++){
@@ -391,12 +333,6 @@ void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
             bgr[0] = Yp + 1.765 * (u - 128);
 
             m.at<Vec3b>(y, x) = bgr;
-
-            // if(jj < 10){
-            //     printf("[y, u, v] = [%d, %d, %d] | ", Yp, u, v);
-            //     printf("[r, g, b] = [%d, %d, %d]\n", bgr[2], bgr[1], bgr[0]);
-            //     jj++;
-            // }
         }
 }
 
@@ -424,7 +360,6 @@ void reverse(uchar* src, uchar* dst, int size){
     }
 }
 
- 
 void showImgHist(const char* title, Mat m){
     showImg(title, m);
 
@@ -444,7 +379,6 @@ void showImgHist(const char* title, Mat m){
     }
     printf("Entropy of \"%s\": %f bits\n", title, entropy);
 
-    
     vector<int> x, y;
     for(auto i : hist) {
         x.push_back(i.first);

@@ -15,7 +15,7 @@ int main(int argc, char* argv[]){
     bool verbose;
     char x;
     while(!(x == 'y' || x == 'n')) {
-        cout << "Present residuals histogram and image output (y/n)? ";
+        cout << "Present histograms and images(verbose mode) (y/n)? ";
         cin >> x;
     }
     verbose = x == 'y' ? true : false;
