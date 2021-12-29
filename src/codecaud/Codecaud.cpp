@@ -21,7 +21,8 @@ Codecaud::Codecaud(const char *filename){
     short ch[2];
 
 	if (! (infile = sf_open (filename, SFM_READ, &sfinfo))) {
-        throw runtime_error("File doesn't exists");
+        cout << "File doesn't exists" << endl;
+        exit(EXIT_FAILURE);
 	}
     
     while ((readcount = (int) sf_readf_short (infile, ch, 1)) > 0) {
@@ -41,7 +42,7 @@ void Codecaud::compress(const char *fileDst, int num, bool lossy, int shamt) {
     else
         preditor(chs);
     
-    cout << "started encoding..." << endl; 
+    cout << "start encoding..." << endl; 
 
     // Golomb
     Golomb g(fileDst, 'e', 0);
@@ -181,7 +182,7 @@ void Codecaud:: preditorLossy(vector<short> vetSrc, int shamt) {
 }
 
 void Codecaud::decompress(const char *fileSrc) {
-    cout << "started decoding..." << endl; 
+    cout << "start decoding..." << endl; 
 
     Golomb g(fileSrc, 'd', 0);
 
@@ -295,12 +296,14 @@ void Codecaud::showHistEnt() {
     }
     cout << "Entropy Original: " << entropy << endl;
 
-    entropy = 0;
+    double entropy_pred = 0;
     for(auto i : map_afterPred) {
         p = (double) i.second / (double) rn.size();
-        entropy += p * (-log2(p));
+        entropy_pred += p * (-log2(p));
     }
-    cout << "\nEntropy of the residuals obtained after prediction: " << entropy << endl;
+    cout << "\nEntropy of the residuals obtained after prediction: " << entropy_pred << endl;
+
+    cout << "\nComparison between the 2 entropies: " << entropy_pred/entropy << endl;
 
     // show Histo
     map<short, int> map_pred;
