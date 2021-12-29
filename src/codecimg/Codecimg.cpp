@@ -16,6 +16,7 @@ void showImgHist(const char* title, Mat m);
 void showYUVHist(const char* title, vector<int>& Y, vector<int>& V, vector<int>& U);
 //
 void apply(Mat src, vector<int>& res);
+void applylossy(Mat src, vector<int>& res, int q);
 void restore(uchar* data, vector<int>& res, int nrows, int ncols);
 void reverse(uchar* src, uchar* dst, int size);
 int idealM(Golomb& g, vector<int>& resY, vector<int>& resU, vector<int>& resV);
@@ -157,6 +158,40 @@ void Codecimg::compress(const char *fileDst){
     g.close();
 }
 
+void Codecimg::compresslossy(const char *fileDst, int qy, int qu, int qv){
+    printf("started lossy compress...\n");
+    
+    vector<int> resY, resU, resV;
+    applylossy(Y, resY, qy);
+    applylossy(U, resU, qu);
+    applylossy(V, resV, qv);
+
+    // showYUVHist("residuals histogram", resY, resU, resV);
+
+    int m = 0;
+    Golomb g = Golomb(fileDst, 'e', m);
+    m = idealM(g, resY, resU, resV);
+
+    printf("ideal m = %d\n", m);
+
+    g.setM(m);
+
+    g.encodeM(m);
+    g.encode(Y.cols);
+    g.encode(Y.rows);
+
+    for(int i = 0; i < Y.cols * Y.rows; i++){
+        g.encode(resY[i]);
+    }
+    for(int i = 0; i < U.cols * U.rows; i++){
+        g.encode(resU[i]);
+    }
+    for(int i = 0; i < V.cols * V.rows; i++){
+        g.encode(resV[i]);
+    }
+    g.close();
+}
+
 void apply(Mat src, vector<int>& res){
     int a, b, c;
     for(int x = src.cols - 1; x > - 1; x--){
@@ -173,6 +208,30 @@ void apply(Mat src, vector<int>& res){
             c = src.at<uchar>(y + 1, x + 1);
             // rn = xn - ^xn
             res.push_back(src.at<uchar>(y, x) - preditorJLS(a, b, c));
+        }
+    }
+}
+
+void applylossy(Mat src, vector<int>& res, int q){
+    int a, b, c;
+    for(int x = src.cols - 1; x > - 1; x--){
+        res.push_back(src.at<uchar>(src.rows - 1, x) >> q);
+        src.at<uchar>(src.rows - 1, x) = res[(res.size())-1] << q;
+    }
+    for(int y = src.rows - 2; y > -1 ; y--){
+        for(int x = src.cols - 1; x > -1; x--){
+            if(x == src.cols - 1){
+                res.push_back((src.at<uchar>(y, x)) >> q);
+                src.at<uchar>(y, x) = res[(res.size())-1] << q;
+                continue;
+            }
+            a = src.at<uchar>(y, x + 1);
+            b = src.at<uchar>(y + 1, x);
+            c = src.at<uchar>(y + 1, x + 1);
+            // rn = xn - ^xn
+            res.push_back((src.at<uchar>(y, x) - preditorJLS(a, b, c)) >> q);
+            // printf("%d = %d", res[(res.size())-1], )
+            src.at<uchar>(y, x) = preditorJLS(a, b, c) + (res[(res.size())-1] << q);
         }
     }
 }
@@ -194,13 +253,13 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     vector<int> resY, resU, resV;
 
     for(int i = 0; i < ncols*nrows; i++){
-        resY.push_back(g.decode());
+        resY.push_back(g.decode() << 5);
     }
     for(int i = 0; i < (ncols/2)*(nrows/2); i++){
-        resU.push_back(g.decode());
+        resU.push_back(g.decode() << 5);
     }
     for(int i = 0; i < (ncols/2)*(nrows/2); i++){
-        resV.push_back(g.decode());
+        resV.push_back(g.decode() << 5);
     }
 
     g.close();
@@ -330,6 +389,7 @@ void Codecimg::transformRGB(Mat &m, Mat &auxU, Mat &auxV){
         }
 }
 
+// media ponderada
 int idealM(Golomb& g, vector<int>& resY, vector<int>& resU, vector<int>& resV){
     map<int, int> aux;
     double med;
