@@ -5,14 +5,13 @@
 int main(int argc, char* argv[]){
 
     //Command line arguments processing
-    /*DESCOMENTAR NA VERSÂO FINAL
+    //DESCOMENTAR NA VERSÂO FINAL
     if(argc != 2){
         cout << "\033[1;31mError: Following argument is required <input filename>\033[0m" << endl;
         return 0; 
     }
     char *inputfile = argv[1];
 
-    Codecaud c(inputfile);*/
     bool verbose;
     char x;
     while(!(x == 'y' || x == 'n')) {
@@ -33,7 +32,7 @@ int main(int argc, char* argv[]){
             cin >> bits;
         }
     }
-    Codecimg c("../files/miuda.png", verbose);
+    Codecimg c(inputfile, verbose);
     
     clock_t begin = clock();
     if(op1 == 0){
