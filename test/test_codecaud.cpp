@@ -1,9 +1,19 @@
 // g++ test_codecaud.cpp -o test_codecaud -lsndfile -I/usr/include/python3.8 -lpython3.8
 #include "../src/codecaud/Codecaud.cpp"
+#include <ctime>
 
-int main(){
+int main(int argc, char* argv[]){
 
-    Codecaud c("../files/sample01.wav");
+    //Command line arguments processing
+    /*DESCOMENTAR NA VERSÂO FINAL
+    if(argc != 2){
+        cout << "\033[1;31mError: Following argument is required <input filename>\033[0m" << endl;
+        return 0; 
+    }
+    char *inputfile = argv[1];
+
+    Codecaud c(inputfile);*/
+    Codecaud c("../files/sample05.wav");
 
     int op1 = -1;
     while(!(op1 == 0 || op1 == 1)) {
@@ -15,8 +25,18 @@ int main(){
         cout << "Choose the predictor (1, 2 or 3): ";
         cin >> op2;
     }
+    int bits = -1;
+    if(op1 == 1){
+        while(bits < 0 || bits > 15) {
+            cout << "Choose quantization step(number of bits to remove): ";
+            cin >> bits;
+        }
+    }
     
-    c.compress("compress.bin", op2, op1);
+    clock_t begin = clock();
+    c.compress("compress.bin", op2, op1, bits);
+    clock_t end = clock();
+    cout <<"Duration: " <<  (double(end - begin) / CLOCKS_PER_SEC) << endl;
     printf("ok compress\n\n");
 
     c.decompress("compress.bin");
