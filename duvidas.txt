@@ -1,3 +1,0 @@
-é mais rápido passar argumentos por ponteiro ou dar return nas funções?
-
-é mais rápido passar por ponteiro se o o valor do objecto for em bytes maior do que numero de bytes do ponteiro
