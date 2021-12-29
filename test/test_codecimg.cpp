@@ -5,7 +5,6 @@
 int main(int argc, char* argv[]){
 
     //Command line arguments processing
-    //DESCOMENTAR NA VERSÂO FINAL
     if(argc != 2){
         cout << "\033[1;31mError: Following argument is required <input filename>\033[0m" << endl;
         return 0; 
