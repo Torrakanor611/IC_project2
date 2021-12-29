@@ -174,8 +174,13 @@ void Codecimg::compresslossy(const char *fileDst, int qy, int qu, int qv){
     m = idealM(g, resY, resU, resV);
 
     printf("ideal m = %d\n", m);
-
     g.setM(m);
+
+    g.encodeMode(1);
+
+    g.encondeShamt(qy);
+    g.encondeShamt(qu);
+    g.encondeShamt(qv);
 
     g.encodeM(m);
     g.encode(Y.cols);
@@ -248,6 +253,13 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
 
     int mode = g.decodeMode();
 
+    int qy = 0, qu = 0, qv = 0;
+    if(mode == 1){
+        qy = g.decodeShamt();
+        qu = g.decodeShamt();
+        qv = g.decodeShamt();
+    }
+
     int m = g.decodeM();
     g.setM(m);
 
@@ -257,13 +269,13 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     vector<int> resY, resU, resV;
 
     for(int i = 0; i < ncols*nrows; i++){
-        resY.push_back(g.decode());
+        resY.push_back(g.decode() << qy);
     }
     for(int i = 0; i < (ncols/2)*(nrows/2); i++){
-        resU.push_back(g.decode());
+        resU.push_back(g.decode() << qu);
     }
     for(int i = 0; i < (ncols/2)*(nrows/2); i++){
-        resV.push_back(g.decode());
+        resV.push_back(g.decode() << qv);
     }
 
     g.close();
