@@ -195,42 +195,69 @@ int Golomb::decode(){
     return 0;
 }
 
+void Golomb::encondeShamt(int shamt){
+    //Shamt -> 5 bits;
+    string sh = convertToBin(shamt, 5);
+    char hdr[5];
+    for(int i=0; i < 5; i++)
+        hdr[i] = sh[i];
+    Gfile.writeNbits(hdr, 5);
+}
 
-void Golomb::encodeHeaderSound(int nFrames, int sampleRate, int Channels, int format){
+int Golomb::decodeShamt(){
+    char shamt[5];
+    Gfile.readNbits(shamt, 5);
+    return convertToInt(shamt,5);
+}
+
+
+
+
+void Golomb::encodeHeaderSound(int nFrames, int sampleRate, int Channels, int format, bool lossy){
     /*
      * Header
      * Golomb m                 -> 32 bits
+     * 
+     * LossyOrLosses            -> 1 bit(0->Lossless, 1->Lossy)
      * Number of samples        -> 32 bits
      * Sample Rate              -> 32 bits
      * Format                   -> 32 bits
      * Channels                 -> 4 bits
      */ 
-    string header = convertToBin(nFrames, 32);
+    string header;
+    if(lossy)
+        header = '1';
+    else
+        header = '0';
+    header += convertToBin(nFrames, 32);
     header += convertToBin(sampleRate, 32);
     header += convertToBin(format,32);
     header += convertToBin(Channels, 4);
 
-    char hdr[100];
-    for(int i=0; i < 100; i++)
+    char hdr[101];
+    for(int i=0; i < 101; i++)
         hdr[i] = header[i];
-    Gfile.writeNbits(hdr, 100);
+    Gfile.writeNbits(hdr, 101);
 }
 
 void Golomb::decodeHeaderSound(int arr[]){
+    //Arr[0] is codecoption (lossy or lossless)
+    char option = Gfile.readBit();
+    arr[0] = int(option&0x1);    
     char rd[32];
-    //Arr[0] is num of samples
-    Gfile.readNbits(rd, 32);
-    arr[0] = convertToInt(rd,32);
-    //Arr[1] is Sample Rate
+    //Arr[1] is num of samples
     Gfile.readNbits(rd, 32);
     arr[1] = convertToInt(rd,32);
-    //Arr[2] is num of samples
+    //Arr[2] is Sample Rate
     Gfile.readNbits(rd, 32);
     arr[2] = convertToInt(rd,32);
-    //Arr[3] is num of channels
+    //Arr[3] is num of samples
+    Gfile.readNbits(rd, 32);
+    arr[3] = convertToInt(rd,32);
+    //Arr[4] is num of channels
     char nc[4];
     Gfile.readNbits(nc, 4);
-    arr[3] = convertToInt(nc,4);
+    arr[4] = convertToInt(nc,4);
 }
 
 
