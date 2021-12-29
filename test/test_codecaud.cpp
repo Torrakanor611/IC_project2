@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
     char *inputfile = argv[1];
 
     Codecaud c(inputfile);*/
-    Codecaud c("../files/sample05.wav");
+    Codecaud c("../files/sample01.wav");
 
     int op1 = -1;
     while(!(op1 == 0 || op1 == 1)) {
