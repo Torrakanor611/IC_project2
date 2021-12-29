@@ -215,7 +215,6 @@ void Golomb::encodeMode(int mode){
     Gfile.writeBit(x);
 }
 
-
 int Golomb::decodeMode(){
     return (int) (Gfile.readBit() & 0x01);
 }

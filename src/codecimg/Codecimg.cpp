@@ -139,8 +139,9 @@ void Codecimg::compress(const char *fileDst){
     m = idealM(g, resY, resU, resV);
 
     printf("ideal m = %d\n", m);
-
     g.setM(m);
+
+    g.encodeMode(0);
 
     g.encodeM(m);
     g.encode(Y.cols);
@@ -244,6 +245,9 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
     printf("started decompress...\n");
     
     Golomb g = Golomb(fileSrc, 'd', 0);
+
+    int mode = g.decodeMode();
+
     int m = g.decodeM();
     g.setM(m);
 
@@ -293,8 +297,6 @@ void Codecimg::decompress(const char *fileSrc, const char *fileDst){
 
     imwrite(fileDst, maux);
 
-    printf("all ok!\n");
-    exit(0);
 }
 
 
