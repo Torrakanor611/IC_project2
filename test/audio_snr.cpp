@@ -31,11 +31,6 @@ int main(int argc, char* argv[])
         cout << "\033[1;31mERROR: File doesn't exist or otherwise can't load file\033[0m" << endl;
         return 0; 
     }
-    //Both files must have the same number of samples
-    /*if(originalaf.getNumChannels() * originalaf.getNumSamplesPerChannel() != compressedaf.getNumChannels() * compressedaf.getNumSamplesPerChannel() ){
-        cout << "\033[1;31mError: Both files must have the same number of samples\033[0m" << endl;
-        return 0; 
-    }*/
     
     //Variables to calculate the maximum per sample absolute error
     double maxError = 0, tmpError;
