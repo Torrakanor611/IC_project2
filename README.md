@@ -42,6 +42,7 @@ doxygen doxyconfig
 ### matplotlib-cpp
 we use matplotlib-cpp that is a wrapper for matplot python library
 >sudo apt install python3 python3-dev
+
 >pip3 install matplotlib
 
 ### libsndfile
